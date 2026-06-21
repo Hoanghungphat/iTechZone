@@ -143,9 +143,7 @@ export const ORDER_STATUS = {
 // ================================
 export const PAYMENT_METHODS = [
   { id: 'cod',      name: 'Thanh toán khi nhận hàng (COD)',  icon: 'Truck' },
-  { id: 'banking',  name: 'Chuyển khoản ngân hàng',          icon: 'Building2' },
-  { id: 'momo',     name: 'Ví MoMo',                         icon: 'Wallet' },
-  { id: 'vnpay',    name: 'VNPay',                            icon: 'CreditCard' },
+  { id: 'banking',  name: 'Chuyển khoản ngân hàng (VietQR)', icon: 'Building2' },
 ]
 
 // ================================
