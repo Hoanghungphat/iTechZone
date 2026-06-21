@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, ShoppingCart, User, Sun, Moon, Menu, X,
   Smartphone, Tablet, ChevronDown, LogOut,
-  Package, Plug
+  Package, Plug, LayoutDashboard
 } from 'lucide-react'
 
 import Logo from '@/components/common/Logo'
@@ -365,6 +365,16 @@ export default function Header() {
                   </button>
                   <div className="absolute right-0 top-full pt-2 hidden group-hover:block z-50">
                     <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-xl border border-gray-100 dark:border-dark-700 p-2 min-w-[180px]">
+                      {/* Nút trang quản lý — chỉ admin/staff */}
+                      {(user?.role === 'admin' || user?.role === 'staff') && (
+                        <>
+                          <Link to="/admin"
+                                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
+                            <LayoutDashboard size={15} /> Trang quản lý
+                          </Link>
+                          <hr className="my-1 border-gray-100 dark:border-dark-700" />
+                        </>
+                      )}
                       <Link to="/tai-khoan"
                             className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 hover:text-primary transition-colors">
                         <User size={15} /> Tài khoản
@@ -474,6 +484,12 @@ export default function Header() {
                 <div className="border-t border-gray-100 dark:border-dark-800 pt-3 mt-3">
                   {isLoggedIn ? (
                     <>
+                      {/* Nút trang quản lý — chỉ admin/staff */}
+                      {(user?.role === 'admin' || user?.role === 'staff') && (
+                        <Link to="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-primary hover:bg-primary/10">
+                          <LayoutDashboard size={18} /> Trang quản lý
+                        </Link>
+                      )}
                       <Link to="/tai-khoan" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-800">
                         <User size={18} /> Tài khoản
                       </Link>
