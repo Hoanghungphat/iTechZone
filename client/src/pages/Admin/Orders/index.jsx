@@ -32,6 +32,7 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [expanded, setExpanded] = useState(null)
+  const [proofModal, setProofModal] = useState(null) // base64 ảnh đang xem
 
   const load = () => {
     setLoading(true)
@@ -113,7 +114,7 @@ export default function AdminOrders() {
                         {/* Ảnh chứng minh chuyển khoản */}
                         {o.paymentProof && (
                           <button
-                            onClick={() => window.open(o.paymentProof, '_blank')}
+                            onClick={() => setProofModal(o.paymentProof)}
                             title="Xem ảnh xác nhận chuyển khoản"
                             className="ml-2 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
                             📷 Proof
@@ -177,5 +178,26 @@ export default function AdminOrders() {
         )}
       </div>
     </div>
+
+    {/* Lightbox xem ảnh proof */}
+    {proofModal && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+        onClick={() => setProofModal(null)}>
+        <div className="relative max-w-2xl w-full" onClick={e => e.stopPropagation()}>
+          <button
+            onClick={() => setProofModal(null)}
+            className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1">
+            ✕ Đóng
+          </button>
+          <img
+            src={proofModal}
+            alt="Ảnh xác nhận thanh toán"
+            className="w-full rounded-2xl shadow-2xl border-4 border-white/10"
+          />
+          <p className="text-center text-white/50 text-xs mt-3">Click ra ngoài để đóng</p>
+        </div>
+      </div>
+    )}
   )
 }
