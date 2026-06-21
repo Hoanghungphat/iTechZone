@@ -12,7 +12,7 @@ import CartSummary from '@/components/cart/CartSummary'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import useCartStore from '@/store/useCartStore'
 import useAuthStore from '@/store/useAuthStore'
-import { createOrder, cancelOrder } from '@/services/orderService'
+import { createOrder, cancelOrder, submitPaymentProof } from '@/services/orderService'
 import { PAYMENT_METHODS } from '@/constants'
 
 const CITY_OPTIONS = [
@@ -32,6 +32,34 @@ export default function CheckoutPage() {
   const [qrData, setQrData] = useState(null) // { orderId, amount }
   const [countdown, setCountdown] = useState(300)
   const timerRef = useRef(null)
+  const [proofImage, setProofImage] = useState(null)   // base64
+  const [proofUploading, setProofUploading] = useState(false)
+
+  // Đọc file ảnh → base64
+  const handleProofFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { toast.error('Ảnh tối đa 5MB'); return }
+    const reader = new FileReader()
+    reader.onload = () => setProofImage(reader.result)
+    reader.readAsDataURL(file)
+  }
+
+  // Gửi xác nhận chuyển khoản + ảnh
+  const handleConfirmPayment = async () => {
+    if (!proofImage) { toast.error('Vui lòng chụp và tải ảnh xác nhận chuyển khoản'); return }
+    setProofUploading(true)
+    try {
+      await submitPaymentProof(qrData.orderId, proofImage)
+      clearInterval(timerRef.current)
+      toast.success('✅ Xác nhận thành công! Staff sẽ kiểm tra và xử lý đơn hàng của bạn.', { duration: 5000 })
+      navigate('/tai-khoan/don-hang')
+    } catch {
+      toast.error('Có lỗi khi gửi ảnh. Vui lòng thử lại.')
+    } finally {
+      setProofUploading(false)
+    }
+  }
 
   const [form, setForm] = useState({
     name:     user?.name  || '',
@@ -225,8 +253,8 @@ export default function CheckoutPage() {
               {/* Nút xác nhận ngay dưới QR */}
               <button
                 onClick={() => { clearInterval(timerRef.current); navigate('/tai-khoan/don-hang') }}
-                className="w-full py-3 bg-primary hover:bg-primary-700 text-white rounded-2xl font-bold transition-colors">
-                Tôi đã chuyển khoản →
+                className="w-full py-2.5 border border-primary text-primary hover:bg-primary/5 rounded-2xl text-sm font-medium transition-colors">
+                Bỏ qua, xem đơn hàng →
               </button>
 
               {/* Thông tin ngân hàng */}
@@ -250,6 +278,36 @@ export default function CheckoutPage() {
               <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl px-3 py-2 text-center">
                 ⚠️ Vui lòng nhập <strong>đúng nội dung chuyển khoản</strong> để đơn hàng được xác nhận nhanh nhất
               </p>
+
+              {/* Upload ảnh xác nhận */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white">
+                  📸 Tải ảnh xác nhận chuyển khoản
+                </label>
+                <label className="flex flex-col items-center justify-center gap-2 w-full h-28 border-2 border-dashed border-gray-300 dark:border-dark-600 rounded-2xl cursor-pointer hover:border-primary transition-colors bg-gray-50 dark:bg-dark-700">
+                  {proofImage ? (
+                    <img src={proofImage} alt="proof" className="h-full w-full object-cover rounded-2xl" />
+                  ) : (
+                    <>
+                      <span className="text-2xl">📷</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 text-center px-2">Chụp màn hình chuyển khoản thành công và tải lên</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleProofFile} />
+                </label>
+                {proofImage && (
+                  <button onClick={() => setProofImage(null)}
+                    className="text-xs text-red-400 hover:text-red-500 w-full text-center">✕ Xoá ảnh</button>
+                )}
+              </div>
+
+              {/* Nút xác nhận thanh toán */}
+              <button
+                onClick={handleConfirmPayment}
+                disabled={proofUploading || !proofImage}
+                className="w-full py-3 bg-primary hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-colors">
+                {proofUploading ? 'Đang gửi...' : '✅ Xác nhận đã thanh toán'}
+              </button>
             </div>
           </div>
         </div>

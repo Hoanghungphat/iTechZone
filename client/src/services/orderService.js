@@ -35,3 +35,11 @@ export async function cancelOrder(orderId) {
   const res = await api.put(`/orders/${orderId}/cancel`)
   return res.data
 }
+
+/**
+ * Gửi ảnh xác nhận chuyển khoản
+ */
+export async function submitPaymentProof(orderId, proofImage) {
+  const res = await api.put(`/orders/${orderId}/payment-proof`, { proofImage })
+  return res.data
+}

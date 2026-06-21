@@ -110,6 +110,15 @@ export default function AdminOrders() {
                         <span className={`text-xs px-2 py-0.5 rounded-lg ${o.paymentMethod === 'cod' ? 'bg-slate-600 text-slate-300' : 'bg-blue-500/20 text-blue-400'}`}>
                           {o.paymentMethod.toUpperCase()}
                         </span>
+                        {/* Ảnh chứng minh chuyển khoản */}
+                        {o.paymentProof && (
+                          <button
+                            onClick={() => window.open(o.paymentProof, '_blank')}
+                            title="Xem ảnh xác nhận chuyển khoản"
+                            className="ml-2 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+                            📷 Proof
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-medium px-2.5 py-1 rounded-lg ${s?.cls || 'bg-slate-600 text-slate-400'}`}>

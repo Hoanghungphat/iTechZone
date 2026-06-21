@@ -102,3 +102,17 @@ export async function getOrderDetail(orderId, userId) {
 export async function cancelMyOrder(orderId, userId) {
   return cancelOrder(orderId, userId)
 }
+
+export async function submitPaymentProof(orderId, userId, proofImage) {
+  // Kiểm tra đơn hàng thuộc user này
+  const order = await prisma.order.findFirst({ where: { id: orderId, userId } })
+  if (!order) throw Object.assign(new Error('Không tìm thấy đơn hàng'), { status: 404 })
+
+  return prisma.order.update({
+    where: { id: orderId },
+    data:  {
+      paymentProof:  proofImage,
+      paymentStatus: 'submitted',  // đạng chờ staff xác nhận
+    },
+  })
+}
