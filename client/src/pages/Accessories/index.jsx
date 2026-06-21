@@ -64,8 +64,14 @@ export default function Accessories() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
-  const handleFilterChange = useCallback((newFilters) => {
-    setFilters(newFilters)
+  const handleFilterChange = useCallback((key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+    setPage(1)
+  }, [])
+
+  const handleReset = useCallback(() => {
+    setFilters({ brands: [], priceMin: undefined, priceMax: undefined, rams: [], storages: [] })
+    setSort('default')
     setPage(1)
   }, [])
 
@@ -108,40 +114,6 @@ export default function Accessories() {
         </div>
       </div>
 
-      {/* Category pills */}
-      <div className="bg-white dark:bg-dark-900 border-b border-gray-100 dark:border-dark-800 py-3">
-        <div className="container-custom flex gap-3 overflow-x-auto no-scrollbar">
-          {[
-            { label: 'Tất cả', brand: null },
-            { label: 'Apple', brand: 'apple' },
-            { label: 'Samsung', brand: 'samsung' },
-            { label: 'Xiaomi', brand: 'xiaomi' },
-            { label: 'Anker', brand: 'anker' },
-            { label: 'Baseus', brand: 'baseus' },
-            { label: 'OPPO', brand: 'oppo' },
-          ].map(({ label, brand }) => {
-            const active = brand === null
-              ? filters.brands.length === 0
-              : filters.brands.includes(brand)
-            return (
-              <button
-                key={label}
-                onClick={() => handleFilterChange({
-                  ...filters,
-                  brands: brand ? [brand] : [],
-                })}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold border-2 transition-all ${
-                  active
-                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400'
-                    : 'border-gray-200 dark:border-dark-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
 
       <div className="container-custom py-8">
         <div className="flex gap-8">
@@ -151,7 +123,8 @@ export default function Accessories() {
               <ProductFilter
                 brands={ACCESSORY_BRANDS}
                 filters={filters}
-                onChange={handleFilterChange}
+                onFilterChange={handleFilterChange}
+                onReset={handleReset}
               />
             </div>
           </aside>
@@ -220,7 +193,8 @@ export default function Accessories() {
             <ProductFilter
               brands={ACCESSORY_BRANDS}
               filters={filters}
-              onChange={(f) => { handleFilterChange(f); setShowMobileFilter(false) }}
+              onFilterChange={(k, v) => { handleFilterChange(k, v); setShowMobileFilter(false) }}
+              onReset={() => { handleReset(); setShowMobileFilter(false) }}
             />
           </motion.div>
         </div>
