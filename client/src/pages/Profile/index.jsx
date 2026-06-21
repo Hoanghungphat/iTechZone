@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Package, LogOut, Edit3, Camera } from 'lucide-react'
+import { User, Package, LogOut, Edit3 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import InputField from '@/components/forms/InputField'
@@ -32,18 +32,13 @@ function ProfileTab({ user }) {
 
   return (
     <div>
-      {/* Thông tin avatar và tên người dùng */}
+      {/* Avatar chữ cái đầu tên */}
       <div className="flex items-center gap-5 mb-8">
-        <div className="relative">
-          <img
-            src={user?.avatar}
-            alt={user?.name}
-            className="w-20 h-20 rounded-full object-cover ring-4 ring-primary/20"
-          />
-          {/* Nút thay đổi ảnh đại diện */}
-          <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-700 transition-colors">
-            <Camera size={14} />
-          </button>
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-700
+                        flex items-center justify-center ring-4 ring-primary/20 flex-shrink-0">
+          <span className="text-white text-2xl font-bold">
+            {user?.name?.charAt(0).toUpperCase()}
+          </span>
         </div>
         <div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">{user?.name}</h3>

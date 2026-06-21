@@ -2,7 +2,7 @@
  * pages/Admin/Products/ProductForm.jsx — Form thêm/sửa sản phẩm
  */
 import { useState } from 'react'
-import { X, Package } from 'lucide-react'
+import { X, Package, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { createProduct, updateProduct } from '@/services/adminService'
 
@@ -41,13 +41,14 @@ export default function ProductForm({ product, onClose, onSuccess }) {
     originalPrice: product?.originalPrice || '',
     stock:         product?.stock         ?? '',
     description:   product?.description   || '',
-    image:         product?.image         || '',
+    images:        product?.images?.length ? product.images : (product?.image ? [product.image] : ['']),
     thumbnail:     product?.thumbnail     || '',
     status:        product?.status        || 'active',
     isNew:         product?.isNew         ?? false,
     isBestseller:  product?.isBestseller  ?? false,
     isFlashSale:   product?.isFlashSale   ?? false,
     isFeatured:    product?.isFeatured    ?? false,
+    variants:      Array.isArray(product?.variants) ? product.variants : [],
   })
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -65,6 +66,17 @@ export default function ProductForm({ product, onClose, onSuccess }) {
         price:         Number(form.price),
         originalPrice: Number(form.originalPrice || form.price),
         stock:         Number(form.stock),
+        images:        form.images.filter(url => url.trim() !== ''),
+        image:         form.images.find(url => url.trim() !== '') || '',
+        // Convert số trong từng variant
+        variants:      form.variants
+          .filter(v => v.color.trim() !== '')
+          .map(v => ({
+            ...v,
+            price:         Number(v.price) || 0,
+            originalPrice: Number(v.originalPrice) || Number(v.price) || 0,
+            stock:         Number(v.stock) || 0,
+          })),
       }
       if (isEdit) {
         await updateProduct(product.id, payload)
@@ -133,8 +145,33 @@ export default function ProductForm({ product, onClose, onSuccess }) {
             <input className={INPUT} value={form.thumbnail} onChange={e => set('thumbnail', e.target.value)} placeholder="https://..." />
           </Field>
 
-          <Field label="Ảnh chính (URL)">
-            <input className={INPUT} value={form.image} onChange={e => set('image', e.target.value)} placeholder="https://..." />
+          <Field label="Ảnh sản phẩm (từng dòng 1 URL)">
+            <div className="space-y-2">
+              {form.images.map((url, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <input
+                    className={INPUT}
+                    value={url}
+                    onChange={e => {
+                      const next = [...form.images]
+                      next[idx] = e.target.value
+                      set('images', next)
+                    }}
+                    placeholder={`URL ảnh ${idx + 1}`}
+                  />
+                  <button type="button"
+                    onClick={() => set('images', form.images.filter((_, i) => i !== idx))}
+                    className="p-2.5 rounded-xl bg-slate-700 hover:bg-red-600/30 text-slate-400 hover:text-red-400 transition-colors flex-shrink-0">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button type="button"
+                onClick={() => set('images', [...form.images, ''])}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-slate-600 text-slate-400 hover:text-white hover:border-slate-500 text-xs transition-colors w-full justify-center">
+                <Plus size={14} /> Thêm URL ảnh
+              </button>
+            </div>
           </Field>
 
           <Field label="Mô tả">
@@ -160,6 +197,86 @@ export default function ProductForm({ product, onClose, onSuccess }) {
                     className="rounded text-red-500" />
                   <span className="text-slate-300 text-sm">{lbl}</span>
                 </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Variants - Màu sắc & Dung lượng */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-slate-300 text-xs font-medium">Màu sắc &amp; Phiên bản</label>
+              <button type="button"
+                onClick={() => set('variants', [...form.variants, { color: '', colorCode: '#000000', capacity: '', price: '', originalPrice: '', stock: '' }])}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs transition-colors">
+                <Plus size={12} /> Thêm phiên bản
+              </button>
+            </div>
+
+            {form.variants.length === 0 && (
+              <p className="text-slate-500 text-xs text-center py-3 bg-slate-700/30 rounded-xl">
+                Chưa có phiên bản — sản phẩm dùng giá &amp; tồn kho cố định
+              </p>
+            )}
+
+            <div className="space-y-3">
+              {form.variants.map((v, idx) => (
+                <div key={idx} className="bg-slate-700/40 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 text-xs font-medium">Phiên bản {idx + 1}</span>
+                    <button type="button"
+                      onClick={() => set('variants', form.variants.filter((_, i) => i !== idx))}
+                      className="text-slate-500 hover:text-red-400 transition-colors">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-slate-500 text-xs mb-1 block">Tên màu</label>
+                      <input value={v.color}
+                        onChange={e => { const next = [...form.variants]; next[idx] = { ...v, color: e.target.value }; set('variants', next) }}
+                        className={INPUT} placeholder="VD: Đen" />
+                    </div>
+                    <div>
+                      <label className="text-slate-500 text-xs mb-1 block">Mã màu</label>
+                      <div className="flex gap-2">
+                        <input type="color" value={v.colorCode || '#000000'}
+                          onChange={e => { const next = [...form.variants]; next[idx] = { ...v, colorCode: e.target.value }; set('variants', next) }}
+                          className="w-10 h-10 rounded-lg border border-slate-600 bg-slate-700 cursor-pointer flex-shrink-0" />
+                        <input value={v.colorCode}
+                          onChange={e => { const next = [...form.variants]; next[idx] = { ...v, colorCode: e.target.value }; set('variants', next) }}
+                          className={INPUT} placeholder="#000000" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-slate-500 text-xs mb-1 block">Dung lượng</label>
+                      <input value={v.capacity}
+                        onChange={e => { const next = [...form.variants]; next[idx] = { ...v, capacity: e.target.value }; set('variants', next) }}
+                        className={INPUT} placeholder="VD: 128GB" />
+                    </div>
+                    <div>
+                      <label className="text-slate-500 text-xs mb-1 block">Tồn kho</label>
+                      <input type="number" min="0" value={v.stock}
+                        onChange={e => { const next = [...form.variants]; next[idx] = { ...v, stock: e.target.value }; set('variants', next) }}
+                        className={INPUT} placeholder="0" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-slate-500 text-xs mb-1 block">Giá bán (₫)</label>
+                      <input type="number" min="0" value={v.price}
+                        onChange={e => { const next = [...form.variants]; next[idx] = { ...v, price: e.target.value }; set('variants', next) }}
+                        className={INPUT} placeholder="15000000" />
+                    </div>
+                    <div>
+                      <label className="text-slate-500 text-xs mb-1 block">Giá gốc (₫)</label>
+                      <input type="number" min="0" value={v.originalPrice}
+                        onChange={e => { const next = [...form.variants]; next[idx] = { ...v, originalPrice: e.target.value }; set('variants', next) }}
+                        className={INPUT} placeholder="17000000" />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

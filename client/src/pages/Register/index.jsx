@@ -100,12 +100,20 @@ export default function RegisterPage() {
           label="Số điện thoại"
           name="phone"
           type="tel"
+          inputMode="numeric"
           placeholder="0901 234 567"
           value={form.phone}
           onChange={(e) => {
             // Chỉ cho nhập số, tối đa 10 ký tự
             const val = e.target.value.replace(/\D/g, '').slice(0, 10)
             setForm({ ...form, phone: val })
+          }}
+          onKeyDown={(e) => {
+            // Chặn cứng khi đã đủ 10 số — tránh buffer tràn sang field kế
+            const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End']
+            if (form.phone.length >= 10 && !allowed.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+              e.preventDefault()
+            }
           }}
           error={errors.phone}
           leftIcon={<Phone size={16} />}

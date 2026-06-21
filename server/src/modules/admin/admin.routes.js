@@ -20,10 +20,11 @@ router.put('/products/:id',    requireStaff,  ctrl.editProduct)
 router.delete('/products/:id', requireStaff,  ctrl.removeProduct)  // staff → request, admin → delete
 
 // ---- Users (Admin only) ----
-router.get('/users',               requireAdmin, ctrl.listUsers)
-router.put('/users/:id',           requireStaff, ctrl.editUser)     // staff → request
-router.patch('/users/:id/toggle',  requireAdmin, ctrl.toggleUser)
-router.delete('/users/:id',        requireAdmin, ctrl.removeUser)
+router.get('/users',                     requireAdmin, ctrl.listUsers)
+router.put('/users/:id',                 requireStaff, ctrl.editUser)
+router.post('/users/:id/reset-password', requireStaff, ctrl.resetUserPassword)
+router.patch('/users/:id/toggle',        requireAdmin, ctrl.toggleUser)
+router.delete('/users/:id',              requireAdmin, ctrl.removeUser)
 
 // ---- Staff (Admin only) ----
 router.get('/staff',        requireAdmin, ctrl.listStaff)

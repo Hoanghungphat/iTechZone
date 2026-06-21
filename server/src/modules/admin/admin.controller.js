@@ -87,6 +87,34 @@ export async function toggleUser(req, res, next) {
 export async function removeUser(req, res, next) {
   try { await svc.deleteUser(req.params.id); return successResponse(res, null, 'Đã xoá người dùng') } catch (e) { next(e) }
 }
+export async function resetUserPassword(req, res, next) {
+  try {
+    const { newPassword } = req.body
+    if (!newPassword || newPassword.length < 6)
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải ít nhất 6 ký tự' })
+
+    const target = await prisma.user.findUnique({ where: { id: req.params.id } })
+    if (!target) return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' })
+
+    if (req.user.role === 'admin') {
+      // Admin → đổi mật khẩu trực tiếp
+      const hashed = await bcrypt.hash(newPassword, 10)
+      await prisma.user.update({ where: { id: req.params.id }, data: { password: hashed } })
+      return successResponse(res, null, 'Đã đổi mật khẩu thành công')
+    }
+
+    // Staff → tạo approval request
+    const request = await svc.createRequest({
+      type: 'RESET_PASSWORD',
+      targetId: req.params.id,
+      targetName: target.name,
+      note: req.body.note || 'Reset mật khẩu theo yêu cầu khách hàng',
+      payload: { newPassword },
+      requestedById: req.user.id,
+    })
+    return successResponse(res, request, 'Đã gửi yêu cầu reset mật khẩu, chờ Admin duyệt', 202)
+  } catch (e) { next(e) }
+}
 
 // ---- Staff ----
 export async function listStaff(req, res, next) {

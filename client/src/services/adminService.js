@@ -31,6 +31,8 @@ export const getUsers      = (params) => adminApi.get('/users', { params })
 export const updateUserAdmin = (id, d) => adminApi.put(`/users/${id}`, d)
 export const toggleUserActive = (id)  => adminApi.patch(`/users/${id}/toggle`)
 export const deleteUserAdmin  = (id)  => adminApi.delete(`/users/${id}`)
+export const resetUserPassword = (id, newPassword, note) =>
+  adminApi.post(`/users/${id}/reset-password`, { newPassword, note })
 
 // Staff
 export const getStaff      = ()       => adminApi.get('/staff')

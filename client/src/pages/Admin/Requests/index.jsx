@@ -8,8 +8,9 @@ import { getRequests, approveRequest, rejectRequest } from '@/services/adminServ
 import { formatDate } from '@/utils/format'
 
 const TYPE_MAP = {
-  DELETE_PRODUCT: { label: 'Xoá sản phẩm', cls: 'bg-red-500/20 text-red-400' },
-  EDIT_USER:      { label: 'Sửa người dùng', cls: 'bg-blue-500/20 text-blue-400' },
+  DELETE_PRODUCT: { label: 'Xoá sản phẩm',    cls: 'bg-red-500/20 text-red-400' },
+  EDIT_USER:      { label: 'Sửa người dùng',   cls: 'bg-blue-500/20 text-blue-400' },
+  RESET_PASSWORD: { label: 'Reset mật khẩu',   cls: 'bg-purple-500/20 text-purple-400' },
 }
 const STATUS_ICONS = {
   pending:  <Clock size={14} className="text-yellow-400" />,

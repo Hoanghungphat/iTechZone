@@ -202,6 +202,10 @@ export async function approveRequest(id, adminId, reviewNote) {
   // Thực hiện hành động
   if (req.type === 'DELETE_PRODUCT') await prisma.product.delete({ where: { id: req.targetId } })
   if (req.type === 'EDIT_USER' && req.payload) await prisma.user.update({ where: { id: req.targetId }, data: req.payload })
+  if (req.type === 'RESET_PASSWORD' && req.payload?.newPassword) {
+    const hashed = await bcrypt.hash(req.payload.newPassword, 10)
+    await prisma.user.update({ where: { id: req.targetId }, data: { password: hashed } })
+  }
 
   return prisma.approvalRequest.update({ where: { id }, data: { status: 'approved', reviewedById: adminId, reviewNote } })
 }
