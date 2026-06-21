@@ -26,13 +26,13 @@ const NEXT_STATUS = {
 }
 
 export default function AdminOrders() {
-  const [data, setData] = useState({ orders: [], total: 0 })
-  const [loading, setLoading] = useState(true)
+  const [data, setData]               = useState({ orders: [], total: 0 })
+  const [loading, setLoading]         = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [expanded, setExpanded] = useState(null)
-  const [proofModal, setProofModal] = useState(null) // base64 ảnh đang xem
+  const [search, setSearch]           = useState('')
+  const [page, setPage]               = useState(1)
+  const [expanded, setExpanded]       = useState(null)
+  const [proofModal, setProofModal]   = useState(null) // base64 ảnh đang xem
 
   const load = () => {
     setLoading(true)
@@ -87,7 +87,7 @@ export default function AdminOrders() {
               {loading ? (
                 <tr><td colSpan={7} className="text-center py-12 text-slate-400">Đang tải...</td></tr>
               ) : data.orders.map(o => {
-                const s = STATUS_MAP[o.status]
+                const s     = STATUS_MAP[o.status]
                 const nexts = NEXT_STATUS[o.status] || []
                 return (
                   <Fragment key={o.id}>
@@ -177,27 +177,27 @@ export default function AdminOrders() {
           </div>
         )}
       </div>
-    </div>
 
-    {/* Lightbox xem ảnh proof */}
-    {proofModal && (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
-        onClick={() => setProofModal(null)}>
-        <div className="relative max-w-2xl w-full" onClick={e => e.stopPropagation()}>
-          <button
-            onClick={() => setProofModal(null)}
-            className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1">
-            ✕ Đóng
-          </button>
-          <img
-            src={proofModal}
-            alt="Ảnh xác nhận thanh toán"
-            className="w-full rounded-2xl shadow-2xl border-4 border-white/10"
-          />
-          <p className="text-center text-white/50 text-xs mt-3">Click ra ngoài để đóng</p>
+      {/* ===== LIGHTBOX xem ảnh proof ===== */}
+      {proofModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          onClick={() => setProofModal(null)}>
+          <div className="relative max-w-2xl w-full" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setProofModal(null)}
+              className="absolute -top-10 right-0 text-white/70 hover:text-white text-sm">
+              ✕ Đóng
+            </button>
+            <img
+              src={proofModal}
+              alt="Ảnh xác nhận thanh toán"
+              className="w-full rounded-2xl shadow-2xl border-4 border-white/10"
+            />
+            <p className="text-center text-white/50 text-xs mt-3">Click ra ngoài để đóng</p>
+          </div>
         </div>
-      </div>
-    )}
+      )}
+    </div>
   )
 }
