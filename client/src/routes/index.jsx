@@ -37,7 +37,7 @@ const AdminUsers     = lazy(() => import('@/pages/Admin/Users'))
 const AdminOrders    = lazy(() => import('@/pages/Admin/Orders'))
 const AdminRequests  = lazy(() => import('@/pages/Admin/Requests'))
 const AdminStaff     = lazy(() => import('@/pages/Admin/Staff'))
-const AdminLogs      = lazy(() => import('@/pages/Admin/Logs'))
+const AdminLogs      = lazy(() => import('@/pages/Admin/AuditLog'))
 
 // Loading fallback khi lazy load
 function PageLoader() {
