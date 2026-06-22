@@ -91,10 +91,10 @@ export default function AdminLayout() {
               <p className="text-slate-400 text-xs truncate">{admin?.email}</p>
             </div>
           )}
-          <a href="/"
+          <a href="/" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white transition-colors mb-1">
             <Home size={18} className="flex-shrink-0" />
-            {sidebarOpen && 'Về trang chủ'}
+            {sidebarOpen && 'Về trang chủ ↗'}
           </a>
           <button onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-colors">
