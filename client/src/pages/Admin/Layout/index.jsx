@@ -23,6 +23,7 @@ const NAV_STAFF = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/products',  icon: Package,          label: 'Sản phẩm' },
   { to: '/admin/orders',    icon: ShoppingBag,      label: 'Đơn hàng' },
+  { to: '/admin/requests',  icon: ClipboardList,    label: 'Yêu cầu' },
 ]
 
 export default function AdminLayout() {

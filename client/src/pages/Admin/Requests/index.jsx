@@ -2,10 +2,11 @@
  * pages/Admin/Requests/index.jsx — Log duyệt yêu cầu từ nhân viên
  */
 import { useEffect, useState } from 'react'
-import { ClipboardList, Check, X, Clock } from 'lucide-react'
+import { ClipboardList, Check, X, Clock, ShieldOff } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { getRequests, approveRequest, rejectRequest } from '@/services/adminService'
 import { formatDate } from '@/utils/format'
+import useAdminStore from '@/store/useAdminStore'
 
 const TYPE_MAP = {
   DELETE_PRODUCT: { label: 'Xoá sản phẩm',    cls: 'bg-red-500/20 text-red-400' },
@@ -19,6 +20,8 @@ const STATUS_ICONS = {
 }
 
 export default function AdminRequests() {
+  const { admin } = useAdminStore()
+  const isAdmin = admin?.role === 'admin'
   const [data, setData] = useState({ requests: [], total: 0 })
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
@@ -53,7 +56,16 @@ export default function AdminRequests() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-white">Duyệt yêu cầu</h1>
-        <p className="text-slate-400 text-sm mt-1">Log yêu cầu từ nhân viên cần Admin phê duyệt</p>
+        <p className="text-slate-400 text-sm mt-1">
+          {isAdmin
+            ? 'Log yêu cầu từ nhân viên cần Admin phê duyệt'
+            : 'Danh sách yêu cầu đã gửi — chỉ Admin mới có quyền duyệt'}
+        </p>
+        {!isAdmin && (
+          <div className="mt-2 inline-flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-1.5">
+            <ShieldOff size={13} /> Bạn chỉ có quyền xem, không thể duyệt hoặc từ chối
+          </div>
+        )}
       </div>
 
       {/* Filter */}
@@ -111,7 +123,7 @@ export default function AdminRequests() {
                   )}
                 </div>
 
-                {req.status === 'pending' && (
+                {req.status === 'pending' && isAdmin && (
                   <div className="flex gap-2 flex-shrink-0">
                     <button onClick={() => setModal({ id: req.id, action: 'approve' })}
                       className="flex items-center gap-1.5 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-xs font-semibold rounded-xl transition-colors">
@@ -122,6 +134,9 @@ export default function AdminRequests() {
                       <X size={14} /> Từ chối
                     </button>
                   </div>
+                )}
+                {req.status === 'pending' && !isAdmin && (
+                  <span className="text-xs text-slate-500 flex-shrink-0 italic">Chờ Admin duyệt</span>
                 )}
               </div>
             </div>
