@@ -36,7 +36,7 @@ router.get('/orders',              requireStaff, ctrl.listOrders)
 router.patch('/orders/:id/status', requireStaff, ctrl.changeOrderStatus)
 
 // ---- Approval Requests ----
-router.get('/requests',               requireAdmin, ctrl.listRequests)
+router.get('/requests',               requireStaff, ctrl.listRequests)   // staff xem được, không duyệt
 router.patch('/requests/:id/approve', requireAdmin, ctrl.approve)
 router.patch('/requests/:id/reject',  requireAdmin, ctrl.reject)
 
