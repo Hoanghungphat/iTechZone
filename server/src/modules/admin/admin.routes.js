@@ -40,4 +40,7 @@ router.get('/requests',               requireStaff, ctrl.listRequests)   // staf
 router.patch('/requests/:id/approve', requireAdmin, ctrl.approve)
 router.patch('/requests/:id/reject',  requireAdmin, ctrl.reject)
 
+// ---- Activity Logs (Admin only) ----
+router.get('/logs', requireAdmin, ctrl.listLogs)
+
 export default router

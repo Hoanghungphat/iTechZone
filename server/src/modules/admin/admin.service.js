@@ -129,49 +129,53 @@ export async function getAllOrders({ page = 1, limit = 20, status, search }) {
   return { orders, total, page, totalPages: Math.ceil(total / limit) }
 }
 
-export async function updateOrderStatus(id, status) {
-  // Nếu huỷ đơn → hoàn lại stock và sold cho từng sản phẩm
-  if (status === 'cancelled') {
-    const order = await prisma.order.findUnique({
-      where: { id },
-      include: { items: true },
+export async function updateOrderStatus(id, status, version, actor) {
+  // Optimistic locking: chỉ update nếu version khớp
+  if (version !== undefined) {
+    const result = await prisma.order.updateMany({
+      where:  { id, version },
+      data:   { status, version: { increment: 1 } },
     })
-
-    if (!order) {
-      const err = new Error('Không tìm thấy đơn hàng')
-      err.statusCode = 404
-      throw err
+    if (result.count === 0) {
+      // Kiểm tra đơn có tồn tại không
+      const exists = await prisma.order.findUnique({ where: { id } })
+      if (!exists) { const e = new Error('Không tìm thấy đơn hàng'); e.statusCode = 404; throw e }
+      // Tồn tại nhưng version không khớp → conflict
+      const e = new Error(`Đơn hàng đã được xử lý bởi nhân viên khác. Vui lòng tải lại trang.`)
+      e.statusCode = 409; throw e
     }
-
-    // Chỉ hoàn stock nếu đơn chưa bị huỷ trước đó
-    if (order.status === 'cancelled') {
-      const err = new Error('Đơn hàng đã được huỷ trước đó')
-      err.statusCode = 400
-      throw err
+    // Nếu hủy đơn → hoàn stock
+    if (status === 'cancelled') {
+      const order = await prisma.order.findUnique({ where: { id }, include: { items: true } })
+      if (order) {
+        await prisma.$transaction(
+          order.items.filter(i => i.productId).map(item =>
+            prisma.product.update({
+              where: { id: item.productId },
+              data:  { stock: { increment: item.quantity }, sold: { decrement: item.quantity } },
+            })
+          )
+        )
+      }
     }
+    if (actor) await createLog(actor, 'UPDATE_ORDER_STATUS', 'order', id, `Chuyển trạng thái đơn ${id.slice(0,8)} → ${status}`)
+    return prisma.order.findUnique({ where: { id } })
+  }
 
+  // Fallback không có version (legacy)
+  if (status === 'cancelled') {
+    const order = await prisma.order.findUnique({ where: { id }, include: { items: true } })
+    if (!order) { const err = new Error('Không tìm thấy đơn hàng'); err.statusCode = 404; throw err }
+    if (order.status === 'cancelled') { const err = new Error('Đơn hàng đã được huỷ trước đó'); err.statusCode = 400; throw err }
     return prisma.$transaction(async (tx) => {
-      // Cập nhật status
-      const updated = await tx.order.update({
-        where: { id },
-        data:  { status: 'cancelled' },
-      })
-      // Hoàn lại stock và sold
+      const updated = await tx.order.update({ where: { id }, data: { status: 'cancelled', version: { increment: 1 } } })
       for (const item of order.items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data:  {
-            stock: { increment: item.quantity },
-            sold:  { decrement: item.quantity },
-          },
-        })
+        if (item.productId) await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity }, sold: { decrement: item.quantity } } })
       }
       return updated
     })
   }
-
-  // Các trạng thái khác → chỉ update status
-  return prisma.order.update({ where: { id }, data: { status } })
+  return prisma.order.update({ where: { id }, data: { status, version: { increment: 1 } } })
 }
 
 // ================================
@@ -195,11 +199,10 @@ export async function createRequest({ type, targetId, targetName, note, requeste
 }
 
 export async function approveRequest(id, adminId, reviewNote) {
-  const req = await prisma.approvalRequest.findUnique({ where: { id } })
+  const req = await prisma.approvalRequest.findUnique({ where: { id }, include: { requestedBy: { select: { name: true } } } })
   if (!req) { const e = new Error('Không tìm thấy yêu cầu'); e.statusCode = 404; throw e }
   if (req.status !== 'pending') { const e = new Error('Yêu cầu đã được xử lý'); e.statusCode = 400; throw e }
 
-  // Thực hiện hành động
   if (req.type === 'DELETE_PRODUCT') await prisma.product.delete({ where: { id: req.targetId } })
   if (req.type === 'EDIT_USER' && req.payload) await prisma.user.update({ where: { id: req.targetId }, data: req.payload })
   if (req.type === 'RESET_PASSWORD' && req.payload?.newPassword) {
@@ -207,11 +210,49 @@ export async function approveRequest(id, adminId, reviewNote) {
     await prisma.user.update({ where: { id: req.targetId }, data: { password: hashed } })
   }
 
-  return prisma.approvalRequest.update({ where: { id }, data: { status: 'approved', reviewedById: adminId, reviewNote } })
+  const updated = await prisma.approvalRequest.update({ where: { id }, data: { status: 'approved', reviewedById: adminId, reviewNote } })
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, role: true } })
+  if (admin) await createLog(
+    { id: adminId, name: admin.name, role: admin.role },
+    'APPROVE_REQUEST', 'request', id,
+    `Duyệt yêu cầu "${req.type}" — ${req.targetName} (bởi ${req.requestedBy?.name})`
+  )
+  return updated
+}
+
+// ================================
+// ACTIVITY LOG
+// ================================
+export async function createLog(actor, action, targetType, targetId, detail) {
+  try {
+    await prisma.activityLog.create({
+      data: { userId: actor.id, userName: actor.name, userRole: actor.role, action, targetType, targetId, detail },
+    })
+  } catch (err) {
+    console.error('createLog error:', err.message)
+  }
+}
+
+export async function getLogs({ page = 1, limit = 30, userId, action }) {
+  const where = {}
+  if (userId) where.userId = userId
+  if (action) where.action = { contains: action, mode: 'insensitive' }
+  const [logs, total] = await Promise.all([
+    prisma.activityLog.findMany({ where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' } }),
+    prisma.activityLog.count({ where }),
+  ])
+  return { logs, total, page, totalPages: Math.ceil(total / limit) }
 }
 
 export async function rejectRequest(id, adminId, reviewNote) {
-  const req = await prisma.approvalRequest.findUnique({ where: { id } })
+  const req = await prisma.approvalRequest.findUnique({ where: { id }, include: { requestedBy: { select: { name: true } } } })
   if (!req || req.status !== 'pending') { const e = new Error('Không thể từ chối yêu cầu này'); e.statusCode = 400; throw e }
-  return prisma.approvalRequest.update({ where: { id }, data: { status: 'rejected', reviewedById: adminId, reviewNote } })
+  const updated = await prisma.approvalRequest.update({ where: { id }, data: { status: 'rejected', reviewedById: adminId, reviewNote } })
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, role: true } })
+  if (admin) await createLog(
+    { id: adminId, name: admin.name, role: admin.role },
+    'REJECT_REQUEST', 'request', id,
+    `Từ chối yêu cầu "${req.type}" — ${req.targetName} (bởi ${req.requestedBy?.name})`
+  )
+  return updated
 }

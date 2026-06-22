@@ -135,7 +135,11 @@ export async function listOrders(req, res, next) {
   } catch (e) { next(e) }
 }
 export async function changeOrderStatus(req, res, next) {
-  try { return successResponse(res, await svc.updateOrderStatus(req.params.id, req.body.status), 'Cập nhật trạng thái đơn hàng') } catch (e) { next(e) }
+  try {
+    const { status, version } = req.body
+    const actor = { id: req.user.id, name: req.user.name, role: req.user.role }
+    return successResponse(res, await svc.updateOrderStatus(req.params.id, status, version, actor), 'Cập nhật trạng thái đơn hàng')
+  } catch (e) { next(e) }
 }
 
 // ---- Requests ----
@@ -150,4 +154,12 @@ export async function approve(req, res, next) {
 }
 export async function reject(req, res, next) {
   try { return successResponse(res, await svc.rejectRequest(req.params.id, req.user.id, req.body.reviewNote), 'Đã từ chối yêu cầu') } catch (e) { next(e) }
+}
+
+// ---- Activity Logs ----
+export async function listLogs(req, res, next) {
+  try {
+    const { page = 1, limit = 30, userId, action } = req.query
+    return successResponse(res, await svc.getLogs({ page: +page, limit: +limit, userId, action }))
+  } catch (e) { next(e) }
 }

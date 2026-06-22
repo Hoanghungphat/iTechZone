@@ -37,6 +37,7 @@ const AdminUsers     = lazy(() => import('@/pages/Admin/Users'))
 const AdminOrders    = lazy(() => import('@/pages/Admin/Orders'))
 const AdminRequests  = lazy(() => import('@/pages/Admin/Requests'))
 const AdminStaff     = lazy(() => import('@/pages/Admin/Staff'))
+const AdminLogs      = lazy(() => import('@/pages/Admin/Logs'))
 
 // Loading fallback khi lazy load
 function PageLoader() {
@@ -131,6 +132,7 @@ export default function AppRoutes() {
           <Route path="orders"    element={<AdminOrders />} />
           <Route path="requests"  element={<AdminRequests />} />
           <Route path="staff"     element={<AdminStaff />} />
+          <Route path="logs"      element={<AdminLogs />} />
         </Route>
       </Routes>
     </Suspense>

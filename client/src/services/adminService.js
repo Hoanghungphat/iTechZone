@@ -41,9 +41,12 @@ export const deleteStaff   = (id)     => adminApi.delete(`/staff/${id}`)
 
 // Orders
 export const getOrders        = (params)       => adminApi.get('/orders', { params })
-export const updateOrderStatus = (id, status)  => adminApi.patch(`/orders/${id}/status`, { status })
+export const updateOrderStatus = (id, status, version) => adminApi.patch(`/orders/${id}/status`, { status, version })
 
 // Requests
 export const getRequests    = (params)      => adminApi.get('/requests', { params })
 export const approveRequest = (id, note)    => adminApi.patch(`/requests/${id}/approve`, { reviewNote: note })
 export const rejectRequest  = (id, note)    => adminApi.patch(`/requests/${id}/reject`,  { reviewNote: note })
+
+// Activity Logs
+export const getLogs = (params) => adminApi.get('/logs', { params })

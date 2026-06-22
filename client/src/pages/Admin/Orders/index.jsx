@@ -42,9 +42,19 @@ export default function AdminOrders() {
   }
   useEffect(() => { load() }, [page, filterStatus, search])
 
-  const handleStatus = async (id, status) => {
-    try { await updateOrderStatus(id, status); toast.success('Đã cập nhật trạng thái'); load() }
-    catch (err) { toast.error(err.message) }
+  const handleStatus = async (id, status, version) => {
+    try {
+      await updateOrderStatus(id, status, version)
+      toast.success('Đã cập nhật trạng thái')
+      load()
+    } catch (err) {
+      if (err.message?.includes('409') || err.message?.includes('nhân viên khác')) {
+        toast.error('⚠️ ' + (err.message || 'Đơn hàng đã được xử lý bởi nhân viên khác. Vui lòng tải lại.'), { duration: 5000 })
+        load() // reload để lấy trạng thái mới nhất
+      } else {
+        toast.error(err.message)
+      }
+    }
   }
 
   return (
@@ -130,7 +140,7 @@ export default function AdminOrders() {
                         {nexts.length > 0 && (
                           <div className="flex gap-1">
                             {nexts.map(ns => (
-                              <button key={ns} onClick={() => handleStatus(o.id, ns)}
+                              <button key={ns} onClick={() => handleStatus(o.id, ns, o.version)}
                                 className={`text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors ${STATUS_MAP[ns]?.cls || 'bg-slate-700 text-slate-300'} hover:opacity-80`}>
                                 → {STATUS_MAP[ns]?.label}
                               </button>

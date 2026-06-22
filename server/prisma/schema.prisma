@@ -74,6 +74,7 @@ model User {
   addresses Address[]
   requestsMade     ApprovalRequest[] @relation("RequestedBy")
   requestsReviewed ApprovalRequest[] @relation("ReviewedBy")
+  activityLogs     ActivityLog[]
 
   @@map("users")
   @@index([email])
@@ -132,6 +133,7 @@ model Order {
   paymentMethod   String   @default("cod")
   paymentStatus   String   @default("unpaid")
   paymentProof    String?  // URL/base64 ảnh chứng minh chuyển khoản
+  version         Int      @default(0)  // optimistic locking
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -202,4 +204,25 @@ model ApprovalRequest {
   @@map("approval_requests")
   @@index([status])
   @@index([requestedById])
+}
+
+// ================================
+// ACTIVITY LOG
+// ================================
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  userName   String   // cached tại thời điểm thực hiện
+  userRole   String   // admin | staff
+  action     String   // UPDATE_ORDER_STATUS | APPROVE_REQUEST | REJECT_REQUEST | DELETE_PRODUCT ...
+  targetType String?  // order | product | user | request
+  targetId   String?
+  detail     String?  // mô tả ngắn gọn
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
+  @@index([createdAt])
+  @@index([userId])
 }
