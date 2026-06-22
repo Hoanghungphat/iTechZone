@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Users, ShoppingBag,
-  ClipboardList, UserCog, LogOut, Shield, Menu, X, ChevronRight
+  ClipboardList, UserCog, LogOut, Shield, Menu, X, ChevronRight, Home
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import useAdminStore from '@/store/useAdminStore'
@@ -91,6 +91,11 @@ export default function AdminLayout() {
               <p className="text-slate-400 text-xs truncate">{admin?.email}</p>
             </div>
           )}
+          <a href="/"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white transition-colors mb-1">
+            <Home size={18} className="flex-shrink-0" />
+            {sidebarOpen && 'Về trang chủ'}
+          </a>
           <button onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-colors">
             <LogOut size={18} className="flex-shrink-0" />
