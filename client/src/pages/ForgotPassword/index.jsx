@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { Mail, Send, Clock, CheckCircle, ArrowLeft } from 'lucide-react'
 
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const COOLDOWN_MS = 15 * 60 * 1000
 
 export default function ForgotPasswordPage() {
@@ -58,7 +59,7 @@ export default function ForgotPasswordPage() {
 
     setLoading(true)
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await fetch(`${BASE}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
