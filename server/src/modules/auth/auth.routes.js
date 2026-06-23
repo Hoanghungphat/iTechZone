@@ -9,6 +9,7 @@ import {
   registerController,
   loginController,
   getMeController,
+  forgotPasswordController,
 } from './auth.controller.js'
 
 const router = Router()
@@ -21,5 +22,8 @@ router.post('/login', loginRules, handleValidation, loginController)
 
 // GET /api/auth/me  [protected]
 router.get('/me', protect, getMeController)
+
+// POST /api/auth/forgot-password  [public — gửi yêu cầu đổi MK lên admin]
+router.post('/forgot-password', forgotPasswordController)
 
 export default router

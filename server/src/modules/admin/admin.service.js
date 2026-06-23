@@ -256,3 +256,114 @@ export async function rejectRequest(id, adminId, reviewNote) {
   )
   return updated
 }
+
+// ================================
+// PASSWORD RESET REQUESTS (admin xử lý yêu cầu quên MK từ người dùng)
+// ================================
+
+/** Admin xem toàn bộ yêu cầu (có thể lọc theo status) */
+export async function listPasswordResetRequests({ status, page = 1, limit = 20 }) {
+  const where = {}
+  if (status) where.status = status
+
+  const [requests, total] = await Promise.all([
+    prisma.passwordResetRequest.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true } },
+      },
+    }),
+    prisma.passwordResetRequest.count({ where }),
+  ])
+  return { requests, total, page, limit }
+}
+
+/** Admin hoàn thành yêu cầu — đặt mật khẩu tạm cho user */
+export async function completePasswordReset(id, tempPassword, adminId) {
+  if (!tempPassword || tempPassword.length < 6) {
+    const err = new Error('Mật khẩu tạm phải có ít nhất 6 ký tự')
+    err.statusCode = 400
+    throw err
+  }
+
+  const req = await prisma.passwordResetRequest.findUnique({
+    where: { id },
+    include: { user: { select: { name: true, phone: true } } },
+  })
+  if (!req) {
+    const err = new Error('Không tìm thấy yêu cầu')
+    err.statusCode = 404
+    throw err
+  }
+  if (req.status !== 'pending') {
+    const err = new Error('Yêu cầu này đã được xử lý')
+    err.statusCode = 409
+    throw err
+  }
+
+  // Hash và cập nhật mật khẩu user
+  const hashed = await bcrypt.hash(tempPassword, 10)
+  await prisma.user.update({ where: { id: req.userId }, data: { password: hashed } })
+
+  // Cập nhật request: lưu tempPassword rõ (để staff xem) + mark completed
+  const updated = await prisma.passwordResetRequest.update({
+    where: { id },
+    data: { status: 'completed', tempPassword, completedAt: new Date() },
+  })
+
+  // Ghi log
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, role: true } })
+  if (admin) await createLog(
+    { id: adminId, name: admin.name, role: admin.role },
+    'RESET_USER_PASSWORD', 'user', req.userId,
+    `Đặt lại mật khẩu cho "${req.user?.name}" (${req.user?.phone || 'chưa có SĐT'})`
+  )
+
+  return updated
+}
+
+/** Admin huỷ yêu cầu */
+export async function cancelPasswordReset(id, adminId) {
+  const req = await prisma.passwordResetRequest.findUnique({ where: { id } })
+  if (!req || req.status !== 'pending') {
+    const err = new Error('Không thể huỷ yêu cầu này')
+    err.statusCode = 400
+    throw err
+  }
+  const updated = await prisma.passwordResetRequest.update({ where: { id }, data: { status: 'cancelled' } })
+  const admin = await prisma.user.findUnique({ where: { id: adminId }, select: { name: true, role: true } })
+  if (admin) await createLog(
+    { id: adminId, name: admin.name, role: admin.role },
+    'CANCEL_PASSWORD_RESET', 'user', req.userId, 'Huỷ yêu cầu đặt lại mật khẩu'
+  )
+  return updated
+}
+
+/** Staff xem yêu cầu đã hoàn thành — CHỈ thấy SĐT + MK tạm (không thấy email) */
+export async function listStaffPasswordResets({ page = 1, limit = 20 } = {}) {
+  const [requests, total] = await Promise.all([
+    prisma.passwordResetRequest.findMany({
+      where: { status: 'completed' },
+      orderBy: { completedAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        user: { select: { phone: true } }, // CHỈ lấy SĐT, không có tên/email
+      },
+    }),
+    prisma.passwordResetRequest.count({ where: { status: 'completed' } }),
+  ])
+  return {
+    requests: requests.map(r => ({
+      id: r.id,
+      phone: r.user?.phone || 'Chưa có SĐT',
+      tempPassword: r.tempPassword,
+      completedAt: r.completedAt,
+    })),
+    total, page, limit,
+  }
+}
+

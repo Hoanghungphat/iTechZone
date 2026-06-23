@@ -43,4 +43,10 @@ router.patch('/requests/:id/reject',  requireAdmin, ctrl.reject)
 // ---- Activity Logs (Admin only) ----
 router.get('/logs', requireAdmin, ctrl.listLogs)
 
+// ---- Password Reset Requests ----
+router.get   ('/password-resets',                requireAdmin, ctrl.listPasswordResets)
+router.post  ('/password-resets/:id/complete',   requireAdmin, ctrl.completePasswordReset)
+router.post  ('/password-resets/:id/cancel',     requireAdmin, ctrl.cancelPasswordReset)
+router.get   ('/password-resets/staff-view',     requireStaff, ctrl.listStaffPasswordResets)
+
 export default router

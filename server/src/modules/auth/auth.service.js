@@ -92,3 +92,39 @@ export async function getMe(userId) {
   }
   return safeUser(user)
 }
+
+// ================================
+// REQUEST PASSWORD RESET (quên MK → gửi yêu cầu lên admin)
+// ================================
+const COOLDOWN_MS = 15 * 60 * 1000 // 15 phút
+
+export async function requestPasswordReset(email) {
+  // 1. Kiểm tra email tồn tại
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user || user.role !== 'user') {
+    const err = new Error('Không tìm thấy tài khoản với email này')
+    err.statusCode = 404
+    throw err
+  }
+
+  // 2. Kiểm tra cooldown 15 phút
+  const recent = await prisma.passwordResetRequest.findFirst({
+    where: {
+      userId: user.id,
+      createdAt: { gte: new Date(Date.now() - COOLDOWN_MS) },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+  if (recent) {
+    const remainMs  = COOLDOWN_MS - (Date.now() - recent.createdAt.getTime())
+    const remainMin = Math.ceil(remainMs / 60000)
+    const err = new Error(`Bạn đã gửi yêu cầu rồi. Vui lòng chờ thêm ${remainMin} phút.`)
+    err.statusCode = 429
+    err.remainMs   = remainMs
+    throw err
+  }
+
+  // 3. Tạo yêu cầu mới
+  await prisma.passwordResetRequest.create({ data: { userId: user.id } })
+  return { message: 'Yêu cầu đã được ghi nhận. Nhân viên sẽ liên hệ qua số điện thoại sớm nhất.' }
+}

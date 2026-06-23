@@ -50,3 +50,9 @@ export const rejectRequest  = (id, note)    => adminApi.patch(`/requests/${id}/r
 
 // Activity Logs
 export const getLogs = (params) => adminApi.get('/logs', { params })
+
+// Password Reset Requests
+export const getPasswordResets       = (params)             => adminApi.get('/password-resets', { params })
+export const completePasswordReset   = (id, tempPassword)   => adminApi.post(`/password-resets/${id}/complete`, { tempPassword })
+export const cancelPasswordReset     = (id)                 => adminApi.post(`/password-resets/${id}/cancel`)
+export const getStaffPasswordResets  = (params)             => adminApi.get('/password-resets/staff-view', { params })

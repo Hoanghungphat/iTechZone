@@ -75,6 +75,7 @@ model User {
   requestsMade     ApprovalRequest[] @relation("RequestedBy")
   requestsReviewed ApprovalRequest[] @relation("ReviewedBy")
   activityLogs     ActivityLog[]
+  passwordResets   PasswordResetRequest[]
 
   @@map("users")
   @@index([email])
@@ -225,4 +226,23 @@ model ActivityLog {
   @@map("activity_logs")
   @@index([createdAt])
   @@index([userId])
+}
+
+// ================================
+// PASSWORD RESET REQUEST (quên mật khẩu qua admin)
+// ================================
+model PasswordResetRequest {
+  id           String    @id @default(cuid())
+  userId       String
+  status       String    @default("pending") // pending | completed | cancelled
+  tempPassword String?
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_requests")
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

@@ -163,3 +163,31 @@ export async function listLogs(req, res, next) {
     return successResponse(res, await svc.getLogs({ page: +page, limit: +limit, userId, action }))
   } catch (e) { next(e) }
 }
+
+// ---- Password Reset Requests ----
+export async function listPasswordResets(req, res, next) {
+  try {
+    const { status, page = 1, limit = 20 } = req.query
+    return successResponse(res, await svc.listPasswordResetRequests({ status, page: +page, limit: +limit }))
+  } catch (e) { next(e) }
+}
+
+export async function completePasswordReset(req, res, next) {
+  try {
+    const { tempPassword } = req.body
+    return successResponse(res, await svc.completePasswordReset(req.params.id, tempPassword, req.user.id))
+  } catch (e) { next(e) }
+}
+
+export async function cancelPasswordReset(req, res, next) {
+  try {
+    return successResponse(res, await svc.cancelPasswordReset(req.params.id, req.user.id))
+  } catch (e) { next(e) }
+}
+
+export async function listStaffPasswordResets(req, res, next) {
+  try {
+    const { page = 1, limit = 20 } = req.query
+    return successResponse(res, await svc.listStaffPasswordResets({ page: +page, limit: +limit }))
+  } catch (e) { next(e) }
+}

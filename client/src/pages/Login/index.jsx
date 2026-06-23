@@ -96,9 +96,9 @@ export default function LoginPage() {
             <input type="checkbox" className="rounded border-gray-300 text-primary" />
             Ghi nhớ đăng nhập
           </label>
-          <a href="#" className="text-sm text-primary hover:text-primary-700 font-medium">
+          <Link to="/quen-mat-khau" className="text-sm text-primary hover:text-primary-700 font-medium">
             Quên mật khẩu?
-          </a>
+          </Link>
         </div>
 
         {/* Nút đăng nhập */}

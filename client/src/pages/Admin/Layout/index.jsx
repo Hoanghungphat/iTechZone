@@ -5,26 +5,28 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Users, ShoppingBag,
-  ClipboardList, UserCog, LogOut, Shield, Menu, X, ChevronRight, Home, Activity
+  ClipboardList, UserCog, LogOut, Shield, Menu, X, ChevronRight, Home, Activity, KeyRound
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import useAdminStore from '@/store/useAdminStore'
 
 const NAV_ADMIN = [
-  { to: '/admin/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/products',   icon: Package,          label: 'Sản phẩm' },
-  { to: '/admin/orders',     icon: ShoppingBag,      label: 'Đơn hàng' },
-  { to: '/admin/users',      icon: Users,            label: 'Người dùng' },
-  { to: '/admin/staff',      icon: UserCog,          label: 'Nhân viên' },
-  { to: '/admin/requests',   icon: ClipboardList,    label: 'Duyệt yêu cầu' },
-  { to: '/admin/logs',       icon: Activity,         label: 'Lịch sử HĐ' },
+  { to: '/admin/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/products',        icon: Package,          label: 'Sản phẩm' },
+  { to: '/admin/orders',          icon: ShoppingBag,      label: 'Đơn hàng' },
+  { to: '/admin/users',           icon: Users,            label: 'Người dùng' },
+  { to: '/admin/staff',           icon: UserCog,          label: 'Nhân viên' },
+  { to: '/admin/requests',        icon: ClipboardList,    label: 'Duyệt yêu cầu' },
+  { to: '/admin/password-resets', icon: KeyRound,         label: 'Quên Mật Khẩu' },
+  { to: '/admin/logs',            icon: Activity,         label: 'Lịch sử HĐ' },
 ]
 
 const NAV_STAFF = [
-  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/products',  icon: Package,          label: 'Sản phẩm' },
-  { to: '/admin/orders',    icon: ShoppingBag,      label: 'Đơn hàng' },
-  { to: '/admin/requests',  icon: ClipboardList,    label: 'Yêu cầu' },
+  { to: '/admin/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/products',        icon: Package,          label: 'Sản phẩm' },
+  { to: '/admin/orders',          icon: ShoppingBag,      label: 'Đơn hàng' },
+  { to: '/admin/requests',        icon: ClipboardList,    label: 'Yêu cầu' },
+  { to: '/admin/password-resets', icon: KeyRound,         label: 'Hỗ trợ MK' },
 ]
 
 export default function AdminLayout() {

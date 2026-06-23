@@ -37,7 +37,9 @@ const AdminUsers     = lazy(() => import('@/pages/Admin/Users'))
 const AdminOrders    = lazy(() => import('@/pages/Admin/Orders'))
 const AdminRequests  = lazy(() => import('@/pages/Admin/Requests'))
 const AdminStaff     = lazy(() => import('@/pages/Admin/Staff'))
-const AdminLogs      = lazy(() => import('@/pages/Admin/AuditLog'))
+const AdminLogs          = lazy(() => import('@/pages/Admin/AuditLog'))
+const AdminPasswordResets = lazy(() => import('@/pages/Admin/PasswordResets'))
+const ForgotPasswordPage  = lazy(() => import('@/pages/ForgotPassword'))
 
 // Loading fallback khi lazy load
 function PageLoader() {
@@ -118,6 +120,7 @@ export default function AppRoutes() {
           <Route path="/dang-ky" element={
             <AuthRoute><RegisterPage /></AuthRoute>
           } />
+          <Route path="/quen-mat-khau" element={<ForgotPasswordPage />} />
         </Route>
 
         {/* ================================
@@ -130,9 +133,10 @@ export default function AppRoutes() {
           <Route path="products"  element={<AdminProducts />} />
           <Route path="users"     element={<AdminUsers />} />
           <Route path="orders"    element={<AdminOrders />} />
-          <Route path="requests"  element={<AdminRequests />} />
-          <Route path="staff"     element={<AdminStaff />} />
-          <Route path="logs"      element={<AdminLogs />} />
+          <Route path="requests"       element={<AdminRequests />} />
+          <Route path="staff"           element={<AdminStaff />} />
+          <Route path="logs"            element={<AdminLogs />} />
+          <Route path="password-resets" element={<AdminPasswordResets />} />
         </Route>
       </Routes>
     </Suspense>
