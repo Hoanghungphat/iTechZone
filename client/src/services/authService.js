@@ -11,10 +11,18 @@ import { STORAGE_KEYS } from '@/constants'
  * Interceptor unwrap thành: { success, message, data: { user, token } }
  */
 export async function login(email, password) {
-  const res = await api.post('/auth/login', { email, password })
-  const { user, token } = res.data
-  if (token) localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
-  return { user, token }
+  try {
+    const res = await api.post('/auth/login', { email, password })
+    const { user, token } = res.data
+    if (token) localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
+    return { user, token }
+  } catch (err) {
+    const data = err.response?.data
+    const error = new Error(data?.message || err.message || 'Lỗi kết nối')
+    error.code  = data?.code
+    error.email = data?.email
+    throw error
+  }
 }
 
 /**
@@ -22,9 +30,8 @@ export async function login(email, password) {
  */
 export async function register(userData) {
   const res = await api.post('/auth/register', userData)
-  const { user, token } = res.data
-  if (token) localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
-  return { user, token }
+  // Backend giờ trả về { message, email } — không có token (cần xác minh email trước)
+  return res.data
 }
 
 /**
@@ -49,6 +56,35 @@ export async function updateProfile(data) {
 export async function changePassword(data) {
   return api.put('/users/password', data)
 }
+
+/** Xác minh email sau đăng ký */
+export async function verifyEmail(email, otp) {
+  const res = await api.post('/auth/verify-email', { email, otp })
+  const { user, token } = res.data
+  if (token) localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
+  return { user, token }
+}
+
+/** Gửi lại OTP xác minh email */
+export async function resendVerifyOtp(email) {
+  return api.post('/auth/resend-verify-otp', { email })
+}
+
+/** Quên mật khẩu — gửi OTP */
+export async function forgotPassword(email) {
+  return api.post('/auth/forgot-password', { email })
+}
+
+/** Xác minh OTP quên mật khẩu */
+export async function verifyForgotOtp(email, otp) {
+  return api.post('/auth/verify-otp', { email, otp })
+}
+
+/** Đặt lại mật khẩu mới */
+export async function resetPassword(email, otp, newPassword) {
+  return api.post('/auth/reset-password', { email, otp, newPassword })
+}
+
 
 /**
  * Đăng xuất

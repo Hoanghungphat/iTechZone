@@ -65,6 +65,7 @@ model User {
   avatar    String?
   role      String   @default("user")
   isActive  Boolean  @default(true)
+  isVerified Boolean @default(false) // xác minh email khi đăng ký
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -226,3 +227,20 @@ model ActivityLog {
   @@index([createdAt])
   @@index([userId])
 }
+
+// ================================
+// OTP TOKEN (quên mật khẩu + xác minh email)
+// ================================
+model OtpToken {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // 6 chữ số
+  type      String   // "forgot_password" | "verify_email"
+  expiresAt DateTime // hết hạn sau 5 phút
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("otp_tokens")
+  @@index([email])
+}
+
