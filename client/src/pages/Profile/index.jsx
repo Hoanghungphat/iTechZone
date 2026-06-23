@@ -5,19 +5,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Package, LogOut, Edit3 } from 'lucide-react'
+import { User, Package, LogOut, Edit3, Lock, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import InputField from '@/components/forms/InputField'
 import useAuthStore from '@/store/useAuthStore'
-import { getMyOrders } from '@/services/orderService'
+import { getMyOrders, cancelOrder } from '@/services/orderService'
+import { changePassword } from '@/services/authService'
 import { formatPrice, formatDate } from '@/utils/format'
 import { ORDER_STATUS } from '@/constants'
 
 // Danh sách tab điều hướng
 const TABS = [
-  { id: 'profile', label: 'Hồ sơ cá nhân', icon: User },
-  { id: 'orders',  label: 'Đơn hàng',       icon: Package },
+  { id: 'profile',  label: 'Hồ sơ cá nhân', icon: User },
+  { id: 'orders',   label: 'Đơn hàng',       icon: Package },
+  { id: 'password', label: 'Đổi mật khẩu',   icon: Lock },
 ]
 
 /**
@@ -101,7 +103,6 @@ function OrdersTab() {
     if (!window.confirm('Bạn có chắc muốn huỷ đơn hàng này?')) return
     setCancelling(orderId)
     try {
-      const { cancelOrder } = await import('@/services/orderService')
       await cancelOrder(orderId)
       toast.success('Đã huỷ đơn hàng')
       loadOrders()
@@ -195,6 +196,68 @@ function OrdersTab() {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * Tab đổi mật khẩu
+ */
+function PasswordTab() {
+  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [loading, setLoading] = useState(false)
+  const [show, setShow]       = useState({ cur: false, new: false, confirm: false })
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (form.newPassword.length < 6) { toast.error('Mật khẩu mới phải có ít nhất 6 ký tự'); return }
+    if (form.newPassword !== form.confirmPassword) { toast.error('Mật khẩu xác nhận không khớp'); return }
+    setLoading(true)
+    try {
+      await changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword })
+      toast.success('Đổi mật khẩu thành công!')
+      setForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (err) {
+      toast.error(err.message || 'Đổi mật khẩu thất bại')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const PwdField = ({ label, field, key: k }) => (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
+      <div className="relative">
+        <input
+          type={show[k] ? 'text' : 'password'}
+          value={form[field]}
+          onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+          className="w-full pr-10 px-4 py-3 rounded-2xl border border-gray-200 dark:border-dark-600
+                     bg-white dark:bg-dark-700 text-gray-900 dark:text-white text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+        />
+        <button type="button" onClick={() => setShow(s => ({ ...s, [k]: !s[k] }))}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          {show[k] ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="max-w-md">
+      <h3 className="text-base font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+        <Lock size={18} className="text-primary" /> Đổi mật khẩu
+      </h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <PwdField label="Mật khẩu hiện tại" field="currentPassword" k="cur" />
+        <PwdField label="Mật khẩu mới" field="newPassword" k="new" />
+        <PwdField label="Xác nhận mật khẩu mới" field="confirmPassword" k="confirm" />
+        <button type="submit" disabled={loading}
+          className="w-full py-3 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-primary-700 disabled:opacity-60 transition shadow-primary">
+          {loading ? 'Đang lưu...' : 'Cập nhật mật khẩu'}
+        </button>
+      </form>
     </div>
   )
 }
@@ -326,8 +389,9 @@ export default function ProfilePage({ defaultTab = 'profile' }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {activeTab === 'profile' && <ProfileTab user={user} />}
-                {activeTab === 'orders'  && <OrdersTab />}
+                {activeTab === 'profile'  && <ProfileTab user={user} />}
+                {activeTab === 'orders'   && <OrdersTab />}
+                {activeTab === 'password' && <PasswordTab />}
               </motion.div>
             </div>
           </div>
