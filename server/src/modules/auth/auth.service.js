@@ -40,17 +40,7 @@ export async function register({ name, email, phone, password }) {
   await prisma.otpToken.create({
     data: { email, code: otp, type: 'verify_email', expiresAt: new Date(Date.now() + OTP_TTL_MS) },
   })
-  try {
-    await sendVerifyEmail(email, otp)
-  } catch (mailErr) {
-    console.error('Send verify email failed:', mailErr.message)
-    // Xóa user vừa tạo để tránh tài khoản bị kẹt không xác minh được
-    await prisma.user.delete({ where: { email } })
-    await prisma.otpToken.deleteMany({ where: { email } })
-    const err = new Error('Không thể gửi email xác minh. Vui lòng kiểm tra lại hoặc thử lại sau.')
-    err.statusCode = 500
-    throw err
-  }
+  await sendVerifyEmail(email, otp)
   return { message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản.', email }
 }
 
