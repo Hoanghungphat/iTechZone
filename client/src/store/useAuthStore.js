@@ -72,12 +72,18 @@ const useAuthStore = create(
       register: async (userData) => {
         set({ isLoading: true, error: null })
         try {
-          const data = await registerService(userData)
-          set({ isLoading: false })
+          const { user, token } = await registerService(userData)
+          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
+          set({ user, token, isLoading: false })
 
-          // Backend trả về { message, email } — cần xác minh email trước khi đăng nhập
-          // Không set user/token vào store, trả về flag để UI chuyển trang
-          return { success: true, needVerification: true, email: data.email }
+          // Sync local cart lên server nếu user vừa đăng ký và đã có items
+          const { default: useCartStore } = await import('./useCartStore')
+          const localItems = useCartStore.getState().items
+          if (localItems.length > 0) {
+            await syncCartToServer(localItems)
+          }
+
+          return { success: true }
         } catch (err) {
           set({ isLoading: false, error: err.message })
           return { success: false, error: err.message }

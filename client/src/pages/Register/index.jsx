@@ -50,10 +50,10 @@ export default function RegisterPage() {
       phone: form.phone,
       password: form.password,
     })
-    if (result.success && result.needVerification) {
-      toast.success('Đăng ký thành công! Vui lòng xác minh email.')
-      navigate(`/xac-minh-email?email=${encodeURIComponent(result.email)}`)
-    } else if (!result.success) {
+    if (result.success) {
+      toast.success('Đăng ký thành công!')
+      navigate('/')
+    } else {
       toast.error(result.error || 'Đăng ký thất bại')
     }
   }

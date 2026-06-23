@@ -34,14 +34,12 @@ export default function LoginPage() {
     const result = await login(form.email, form.password)
     if (result.success) {
       toast.success('Đăng nhập thành công!')
+      // Admin và Staff → vào trang quản lý
       if (['admin', 'staff'].includes(result.role)) {
         navigate('/admin/dashboard')
       } else {
         navigate('/')
       }
-    } else if (result.code === 'EMAIL_NOT_VERIFIED') {
-      toast.error('Tài khoản chưa xác minh email!')
-      navigate(`/xac-minh-email?email=${encodeURIComponent(result.email || form.email)}`)
     } else {
       toast.error(result.error || 'Đăng nhập thất bại')
     }
@@ -98,8 +96,7 @@ export default function LoginPage() {
             <input type="checkbox" className="rounded border-gray-300 text-primary" />
             Ghi nhớ đăng nhập
           </label>
-          <a href="#" className="text-sm text-primary hover:text-primary-700 font-medium"
-            onClick={e => { e.preventDefault(); navigate('/quen-mat-khau') }}>
+          <a href="#" className="text-sm text-primary hover:text-primary-700 font-medium">
             Quên mật khẩu?
           </a>
         </div>

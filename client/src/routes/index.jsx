@@ -27,8 +27,6 @@ const LoginPage     = lazy(() => import('@/pages/Login'))
 const RegisterPage  = lazy(() => import('@/pages/Register'))
 const ProfilePage   = lazy(() => import('@/pages/Profile'))
 const NotFound      = lazy(() => import('@/pages/NotFound'))
-const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'))
-const VerifyEmail    = lazy(() => import('@/pages/VerifyEmail'))
 
 // Admin Panel pages
 const AdminLayout    = lazy(() => import('@/pages/Admin/Layout'))
@@ -108,8 +106,6 @@ export default function AppRoutes() {
 
           {/* 404 — Không tìm thấy trang */}
           <Route path="*" element={<NotFound />} />
-          <Route path="/quen-mat-khau" element={<ForgotPassword />} />
-          <Route path="/xac-minh-email"  element={<VerifyEmail />} />
         </Route>
 
         {/* ================================
