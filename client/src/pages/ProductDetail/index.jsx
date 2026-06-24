@@ -176,7 +176,7 @@ function StarPicker({ value, onChange }) {
 // ============================================
 // REVIEW SECTION (real API)
 // ============================================
-function ReviewSection({ productId, rating: initialRating, reviewCount: initialCount }) {
+function ReviewSection({ productId, rating: initialRating, reviewCount: initialCount, onCountChange }) {
   const { user } = useAuthStore()
   const [reviews, setReviews]       = useState([])
   const [loading, setLoading]       = useState(true)
@@ -191,6 +191,7 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
       const data = await getReviews(productId)
       const list = Array.isArray(data) ? data : (data?.reviews ?? [])
       setReviews(list)
+      onCountChange?.(list.length)   // cập nhật tab label với số thật
       if (user) setHasReviewed(list.some(r => r.userId === user.id))
     } catch { /* ignore */ }
     finally { setLoading(false) }
@@ -344,6 +345,7 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1)
   const [activeTab, setActiveTab] = useState('specs')
   const [isWishlisted, setIsWishlisted] = useState(false)
+  const [realReviewCount, setRealReviewCount] = useState(null)
 
   const { addToCart } = useAddToCart()
 
@@ -451,7 +453,7 @@ export default function ProductDetail() {
   const tabs = [
     { id: 'specs',   label: 'Thông số kỹ thuật' },
     { id: 'desc',    label: 'Mô tả sản phẩm' },
-    { id: 'reviews', label: `Đánh giá (${product.reviewCount})` },
+    { id: 'reviews', label: `Đánh giá (${realReviewCount ?? product.reviewCount})` },
   ]
 
   return (
@@ -710,7 +712,7 @@ export default function ProductDetail() {
             )}
             {activeTab === 'reviews' && (
               <motion.div key="reviews" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <ReviewSection productId={product.id} rating={product.rating} reviewCount={product.reviewCount} />
+                <ReviewSection productId={product.id} rating={product.rating} reviewCount={product.reviewCount} onCountChange={setRealReviewCount} />
               </motion.div>
             )}
           </AnimatePresence>
