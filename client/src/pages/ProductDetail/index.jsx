@@ -191,7 +191,7 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
       const data = await getReviews(productId)
       const list = Array.isArray(data) ? data : (data?.reviews ?? [])
       setReviews(list)
-      onCountChange?.(list.length)   // cập nhật tab label với số thật
+      onCountChange?.(baseCount + list.length)   // tab label dùng tổng (mock + real)
       if (user) setHasReviewed(list.some(r => r.userId === user.id))
     } catch { /* ignore */ }
     finally { setLoading(false) }
@@ -199,17 +199,28 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
 
   useEffect(() => { loadReviews() }, [productId])
 
-  // Tính rating thật từ reviews
-  const realRating = reviews.length
-    ? +(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
-    : initialRating
+  // Blend mock base (product.rating, product.reviewCount) + real user reviews
+  const baseCount   = initialCount  || 0
+  const baseRating  = initialRating || 0
+  const realCount   = reviews.length
+  const totalCount  = baseCount + realCount
+  const realSum     = reviews.reduce((s, r) => s + r.rating, 0)
+  const blendedRating = totalCount > 0
+    ? +((baseRating * baseCount + realSum) / totalCount).toFixed(1)
+    : 0
 
-  // Phân phối sao
-  const dist = [5,4,3,2,1].map(s => ({
-    star: s,
-    count: reviews.filter(r => r.rating === s).length,
-    pct: reviews.length ? Math.round(reviews.filter(r => r.rating === s).length / reviews.length * 100) : 0,
-  }))
+  // Phân phối sao (ước tính từ base + real)
+  const baseSumByStars = {
+    5: Math.round(baseCount * 0.70),
+    4: Math.round(baseCount * 0.20),
+    3: Math.round(baseCount * 0.07),
+    2: Math.round(baseCount * 0.02),
+    1: Math.round(baseCount * 0.01),
+  }
+  const dist = [5,4,3,2,1].map(s => {
+    const count = (baseSumByStars[s] || 0) + reviews.filter(r => r.rating === s).length
+    return { star: s, count, pct: totalCount > 0 ? Math.round(count / totalCount * 100) : 0 }
+  })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -232,9 +243,9 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
       {/* Rating summary */}
       <div className="flex items-center gap-8 p-6 bg-gray-50 dark:bg-dark-800 rounded-2xl">
         <div className="text-center">
-          <div className="text-5xl font-black text-gray-900 dark:text-white">{realRating}</div>
-          <StarRating rating={realRating} size="md" showCount={false} className="mt-1" />
-          <p className="text-xs text-gray-500 mt-1">{reviews.length} đánh giá</p>
+          <div className="text-5xl font-black text-gray-900 dark:text-white">{blendedRating}</div>
+          <StarRating rating={blendedRating} size="md" showCount={false} className="mt-1" />
+          <p className="text-xs text-gray-500 mt-1">{totalCount.toLocaleString('vi-VN')} đánh giá</p>
         </div>
         <div className="flex-1 space-y-2">
           {dist.map(({ star, count, pct }) => (
