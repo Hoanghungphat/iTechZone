@@ -19,8 +19,10 @@ import ProductSlider from '@/components/product/ProductSlider'
 import ErrorState from '@/components/ui/ErrorState'
 import Spinner from '@/components/common/Spinner'
 import { useAddToCart } from '@/hooks/useAddToCart'
+import useAuthStore from '@/store/useAuthStore'
 import { getProductBySlug, getRelatedProducts } from '@/services/productService'
-import { formatPrice } from '@/utils/format'
+import { getReviews, createReview } from '@/services/reviewService'
+import { formatPrice, formatDate } from '@/utils/format'
 
 // ============================================
 // IMAGE GALLERY
@@ -151,62 +153,178 @@ function SpecsTable({ specs }) {
 }
 
 // ============================================
-// MOCK REVIEWS
+// STAR PICKER (interactive)
 // ============================================
-const MOCK_REVIEWS = [
-  { id: 1, name: 'Nguyễn Văn A', rating: 5, date: '10/05/2024', comment: 'Sản phẩm rất tốt, đúng hàng chính hãng. Giao hàng nhanh, đóng gói cẩn thận. Rất hài lòng!', verified: true },
-  { id: 2, name: 'Trần Thị B', rating: 5, date: '08/05/2024', comment: 'Điện thoại đẹp, máy mượt mà, pin trâu. Shop tư vấn nhiệt tình. Sẽ mua lại.', verified: true },
-  { id: 3, name: 'Lê Minh C', rating: 4, date: '05/05/2024', comment: 'Máy ok, chỉ tiếc là không có quà tặng thêm như shop khác. Nhưng nhìn chung hài lòng.', verified: false },
-]
-
-function ReviewSection({ rating, reviewCount }) {
+function StarPicker({ value, onChange }) {
+  const [hovered, setHovered] = useState(0)
   return (
-    <div>
-      {/* Summary */}
-      <div className="flex items-center gap-8 p-6 bg-gray-50 dark:bg-dark-800 rounded-2xl mb-6">
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(s => (
+        <button key={s} type="button"
+          onMouseEnter={() => setHovered(s)}
+          onMouseLeave={() => setHovered(0)}
+          onClick={() => onChange(s)}
+          className="transition-transform hover:scale-110">
+          <Star size={28}
+            className={(hovered || value) >= s ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 dark:text-gray-600'} />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ============================================
+// REVIEW SECTION (real API)
+// ============================================
+function ReviewSection({ productId, rating: initialRating, reviewCount: initialCount }) {
+  const { user } = useAuthStore()
+  const [reviews, setReviews]       = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [myRating, setMyRating]     = useState(5)
+  const [comment, setComment]       = useState('')
+  const [hasReviewed, setHasReviewed] = useState(false)
+
+  const loadReviews = async () => {
+    try {
+      setLoading(true)
+      const data = await getReviews(productId)
+      const list = Array.isArray(data) ? data : (data?.reviews ?? [])
+      setReviews(list)
+      if (user) setHasReviewed(list.some(r => r.userId === user.id))
+    } catch { /* ignore */ }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { loadReviews() }, [productId])
+
+  // Tính rating thật từ reviews
+  const realRating = reviews.length
+    ? +(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : initialRating
+
+  // Phân phối sao
+  const dist = [5,4,3,2,1].map(s => ({
+    star: s,
+    count: reviews.filter(r => r.rating === s).length,
+    pct: reviews.length ? Math.round(reviews.filter(r => r.rating === s).length / reviews.length * 100) : 0,
+  }))
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!comment.trim()) { toast.error('Vui lòng nhập nội dung đánh giá'); return }
+    setSubmitting(true)
+    try {
+      await createReview(productId, { rating: myRating, comment: comment.trim() })
+      toast.success('Cảm ơn bạn đã đánh giá! 🎉')
+      setComment('')
+      setMyRating(5)
+      setHasReviewed(true)
+      loadReviews()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || 'Không thể gửi đánh giá')
+    } finally { setSubmitting(false) }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Rating summary */}
+      <div className="flex items-center gap-8 p-6 bg-gray-50 dark:bg-dark-800 rounded-2xl">
         <div className="text-center">
-          <div className="text-5xl font-black text-gray-900 dark:text-white">{rating}</div>
-          <StarRating rating={rating} size="md" showCount={false} className="mt-1" />
-          <p className="text-xs text-gray-500 mt-1">{(reviewCount || 0).toLocaleString('vi-VN')} đánh giá</p>
+          <div className="text-5xl font-black text-gray-900 dark:text-white">{realRating}</div>
+          <StarRating rating={realRating} size="md" showCount={false} className="mt-1" />
+          <p className="text-xs text-gray-500 mt-1">{reviews.length} đánh giá</p>
         </div>
         <div className="flex-1 space-y-2">
-          {[5,4,3,2,1].map(star => (
+          {dist.map(({ star, count, pct }) => (
             <div key={star} className="flex items-center gap-3">
               <span className="text-xs text-gray-500 w-3">{star}</span>
-              <Star size={12} className="text-yellow-400 fill-yellow-400" />
+              <Star size={12} className="text-yellow-400 fill-yellow-400 flex-shrink-0" />
               <div className="flex-1 h-2 rounded-full bg-gray-200 dark:bg-dark-700 overflow-hidden">
-                <div
-                  className="h-full bg-yellow-400 rounded-full"
-                  style={{ width: star === 5 ? '70%' : star === 4 ? '20%' : star === 3 ? '7%' : '3%' }}
-                />
+                <div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
               </div>
+              <span className="text-xs text-gray-400 w-8 text-right">{count}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Reviews */}
-      <div className="space-y-4">
-        {MOCK_REVIEWS.map(review => (
-          <div key={review.id} className="p-5 bg-white dark:bg-dark-800 rounded-2xl border border-gray-100 dark:border-dark-700">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-gray-900 dark:text-white">{review.name}</span>
-                  {review.verified && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/30 text-green-600 text-xs font-medium">
-                      <Check size={10} /> Đã mua
-                    </span>
-                  )}
-                </div>
-                <StarRating rating={review.rating} size="sm" showCount={false} className="mt-1" />
-              </div>
-              <span className="text-xs text-gray-400">{review.date}</span>
-            </div>
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{review.comment}</p>
+      {/* Form viết đánh giá */}
+      {user ? (
+        hasReviewed ? (
+          <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl border border-green-200 dark:border-green-800">
+            <Check size={16} className="text-green-600" />
+            <p className="text-sm text-green-700 dark:text-green-400 font-medium">Bạn đã đánh giá sản phẩm này rồi.</p>
           </div>
-        ))}
-      </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-5 bg-white dark:bg-dark-800 rounded-2xl border border-gray-100 dark:border-dark-700 space-y-4">
+            <h3 className="font-bold text-gray-900 dark:text-white">Viết đánh giá của bạn</h3>
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Chọn số sao:</p>
+              <StarPicker value={myRating} onChange={setMyRating} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nội dung đánh giá</label>
+              <textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                rows={3}
+                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+              />
+            </div>
+            <button type="submit" disabled={submitting}
+              className="px-6 py-2.5 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-primary-700 disabled:opacity-60 transition shadow-primary">
+              {submitting ? 'Đang gửi...' : 'Gửi đánh giá'}
+            </button>
+          </form>
+        )
+      ) : (
+        <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-2xl border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300">
+          <Link to="/dang-nhap" className="font-bold underline">Đăng nhập</Link> để viết đánh giá sản phẩm.
+        </div>
+      )}
+
+      {/* Danh sách đánh giá */}
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2].map(i => <div key={i} className="h-24 bg-gray-100 dark:bg-dark-700 rounded-2xl animate-pulse" />)}
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-10 text-gray-400">
+          <Star size={36} className="mx-auto mb-2 opacity-30" />
+          <p className="text-sm">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map(review => (
+            <motion.div key={review.id}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              className="p-5 bg-white dark:bg-dark-800 rounded-2xl border border-gray-100 dark:border-dark-700">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-700 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm font-bold">{review.user?.name?.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-gray-900 dark:text-white">{review.user?.name}</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/30 text-green-600 text-xs font-medium">
+                        <Check size={10} /> Đã mua
+                      </span>
+                    </div>
+                    <StarRating rating={review.rating} size="sm" showCount={false} className="mt-0.5" />
+                  </div>
+                </div>
+                <span className="text-xs text-gray-400">{formatDate(review.createdAt)}</span>
+              </div>
+              {review.comment && (
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mt-2 pl-12">{review.comment}</p>
+              )}
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -592,7 +710,7 @@ export default function ProductDetail() {
             )}
             {activeTab === 'reviews' && (
               <motion.div key="reviews" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <ReviewSection rating={product.rating} reviewCount={product.reviewCount} />
+                <ReviewSection productId={product.id} rating={product.rating} reviewCount={product.reviewCount} />
               </motion.div>
             )}
           </AnimatePresence>
