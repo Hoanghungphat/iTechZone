@@ -3,8 +3,8 @@
  */
 import * as svc from './admin.service.js'
 import { successResponse } from '../../core/utils/response.js'
+import { generateAccessToken } from '../auth/auth.service.js'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
 import prisma from '../../configs/database.js'
 
 // ---- Auth ----
@@ -22,7 +22,7 @@ export async function adminLogin(req, res, next) {
     const ok = await bcrypt.compare(password, user.password)
     if (!ok) return res.status(401).json({ success: false, message: 'Mật khẩu không đúng' })
 
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN })
+    const token = generateAccessToken({ id: user.id, email: user.email, role: user.role })
     return successResponse(res, {
       token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
