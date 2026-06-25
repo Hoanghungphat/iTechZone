@@ -327,9 +327,7 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-gray-900 dark:text-white">{review.user?.name}</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/30 text-green-600 text-xs font-medium">
-                        <Check size={10} /> Đã mua
-                      </span>
+
                     </div>
                     <StarRating rating={review.rating} size="sm" showCount={false} className="mt-0.5" />
                   </div>
