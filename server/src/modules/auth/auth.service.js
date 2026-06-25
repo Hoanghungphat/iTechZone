@@ -22,6 +22,11 @@ export function generateRefreshToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: REFRESH_EXPIRES })
 }
 
+// Admin/Staff token: 8 giờ (không có refresh token)
+export function generateAdminToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
+}
+
 function safeUser(user) {
   const { password, ...safe } = user
   return safe

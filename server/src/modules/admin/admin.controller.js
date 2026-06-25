@@ -3,7 +3,7 @@
  */
 import * as svc from './admin.service.js'
 import { successResponse } from '../../core/utils/response.js'
-import { generateAccessToken } from '../auth/auth.service.js'
+import { generateAdminToken } from '../auth/auth.service.js'
 import bcrypt from 'bcryptjs'
 import prisma from '../../configs/database.js'
 
@@ -22,7 +22,7 @@ export async function adminLogin(req, res, next) {
     const ok = await bcrypt.compare(password, user.password)
     if (!ok) return res.status(401).json({ success: false, message: 'Mật khẩu không đúng' })
 
-    const token = generateAccessToken({ id: user.id, email: user.email, role: user.role })
+    const token = generateAdminToken({ id: user.id, email: user.email, role: user.role })
     return successResponse(res, {
       token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
