@@ -69,13 +69,6 @@ export default function CookieConsent() {
                 </div>
               </div>
 
-              {/* Security note */}
-              <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/30 rounded-xl mb-4">
-                <Shield size={14} className="text-green-600 flex-shrink-0" />
-                <p className="text-xs text-green-700 dark:text-green-400">
-                  Cookie được mã hoá (HttpOnly) — JavaScript không thể đọc, bảo mật tuyệt đối.
-                </p>
-              </div>
 
               {/* Actions */}
               <div className="flex gap-3">
