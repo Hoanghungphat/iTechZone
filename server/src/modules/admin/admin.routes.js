@@ -49,4 +49,7 @@ router.post  ('/password-resets/:id/complete',   requireAdmin, ctrl.completePass
 router.post  ('/password-resets/:id/cancel',     requireAdmin, ctrl.cancelPasswordReset)
 router.get   ('/password-resets/staff-view',     requireStaff, ctrl.listStaffPasswordResets)
 
+// ---- Reviews (Admin only — xoá review tiêu cực) ----
+router.delete('/reviews/:id', requireAdmin, ctrl.deleteReview)
+
 export default router

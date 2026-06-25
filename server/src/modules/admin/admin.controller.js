@@ -191,3 +191,26 @@ export async function listStaffPasswordResets(req, res, next) {
     return successResponse(res, await svc.listStaffPasswordResets({ page: +page, limit: +limit }))
   } catch (e) { next(e) }
 }
+
+// ---- Reviews ----
+export async function deleteReview(req, res, next) {
+  try {
+    const { id } = req.params
+    const review = await prisma.review.findUnique({ where: { id } })
+    if (!review) return res.status(404).json({ success: false, message: 'Không tìm thấy đánh giá' })
+
+    await prisma.review.delete({ where: { id } })
+
+    // Cập nhật lại rating trung bình sản phẩm
+    const { _avg } = await prisma.review.aggregate({
+      where: { productId: review.productId },
+      _avg:  { rating: true },
+    })
+    await prisma.product.update({
+      where: { id: review.productId },
+      data:  { rating: Math.round((_avg.rating ?? 0) * 10) / 10 },
+    })
+
+    return successResponse(res, null, 'Đã xoá đánh giá')
+  } catch (e) { next(e) }
+}

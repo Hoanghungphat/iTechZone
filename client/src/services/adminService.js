@@ -56,3 +56,6 @@ export const getPasswordResets       = (params)             => adminApi.get('/pa
 export const completePasswordReset   = (id, tempPassword)   => adminApi.post(`/password-resets/${id}/complete`, { tempPassword })
 export const cancelPasswordReset     = (id)                 => adminApi.post(`/password-resets/${id}/cancel`)
 export const getStaffPasswordResets  = (params)             => adminApi.get('/password-resets/staff-view', { params })
+
+// Reviews — admin xoá bình luận tiêu cực
+export const adminDeleteReview = (reviewId) => adminApi.delete(`/reviews/${reviewId}`)

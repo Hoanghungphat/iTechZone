@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingCart, Zap, Shield, Truck, Heart,
   ChevronLeft, ChevronRight, Check, Star,
-  Smartphone, ArrowLeft, Share2
+  Smartphone, ArrowLeft, Share2, StarHalf, RotateCcw, Plus, Minus, Trash2
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -20,8 +20,10 @@ import ErrorState from '@/components/ui/ErrorState'
 import Spinner from '@/components/common/Spinner'
 import { useAddToCart } from '@/hooks/useAddToCart'
 import useAuthStore from '@/store/useAuthStore'
+import useAdminStore from '@/store/useAdminStore'
 import { getProductBySlug, getRelatedProducts } from '@/services/productService'
 import { getReviews, createReview, updateReview } from '@/services/reviewService'
+import { adminDeleteReview } from '@/services/adminService'
 import { formatPrice, formatDate } from '@/utils/format'
 
 // ============================================
@@ -178,13 +180,14 @@ function StarPicker({ value, onChange }) {
 // ============================================
 function ReviewSection({ productId, rating: initialRating, reviewCount: initialCount }) {
   const { user } = useAuthStore()
+  const { admin } = useAdminStore()
   const [reviews, setReviews]       = useState([])
   const [loading, setLoading]       = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [myRating, setMyRating]     = useState(5)
   const [comment, setComment]       = useState('')
   const [hasReviewed, setHasReviewed] = useState(false)
-  const [editing, setEditing]         = useState(null)  // { id, rating, comment }
+  const [editing, setEditing]         = useState(null)
   const [editSubmitting, setEditSubmitting] = useState(false)
 
   const loadReviews = async () => {
@@ -240,6 +243,17 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể cập nhật đánh giá')
     } finally { setEditSubmitting(false) }
+  }
+
+  const handleAdminDelete = async (reviewId) => {
+    if (!window.confirm('Xoá đánh giá này?')) return
+    try {
+      await adminDeleteReview(reviewId)
+      toast.success('Đã xoá đánh giá')
+      loadReviews()
+    } catch (err) {
+      toast.error(err?.message || 'Không thể xoá đánh giá')
+    }
   }
 
   return (
@@ -339,6 +353,15 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
                       onClick={() => setEditing({ id: review.id, rating: review.rating, comment: review.comment || '' })}
                       className="text-xs text-primary hover:underline font-medium ml-1">
                       Sửa
+                    </button>
+                  )}
+                  {/* Admin xoá bình luận tiêu cực */}
+                  {admin && (
+                    <button
+                      onClick={() => handleAdminDelete(review.id)}
+                      className="ml-1 p-1 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 transition-colors"
+                      title="Xoá đánh giá (Admin)">
+                      <Trash2 size={14} />
                     </button>
                   )}
                 </div>
