@@ -21,7 +21,7 @@ import Spinner from '@/components/common/Spinner'
 import { useAddToCart } from '@/hooks/useAddToCart'
 import useAuthStore from '@/store/useAuthStore'
 import { getProductBySlug, getRelatedProducts } from '@/services/productService'
-import { getReviews, createReview } from '@/services/reviewService'
+import { getReviews, createReview, updateReview } from '@/services/reviewService'
 import { formatPrice, formatDate } from '@/utils/format'
 
 // ============================================
@@ -184,6 +184,8 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
   const [myRating, setMyRating]     = useState(5)
   const [comment, setComment]       = useState('')
   const [hasReviewed, setHasReviewed] = useState(false)
+  const [editing, setEditing]         = useState(null)  // { id, rating, comment }
+  const [editSubmitting, setEditSubmitting] = useState(false)
 
   const loadReviews = async () => {
     try {
@@ -224,6 +226,20 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message || 'Không thể gửi đánh giá')
     } finally { setSubmitting(false) }
+  }
+
+  const handleEdit = async (e) => {
+    e.preventDefault()
+    if (!editing?.comment?.trim()) { toast.error('Vui lòng nhập nội dung'); return }
+    setEditSubmitting(true)
+    try {
+      await updateReview(editing.id, { rating: editing.rating, comment: editing.comment.trim() })
+      toast.success('Cập nhật đánh giá thành công!')
+      setEditing(null)
+      loadReviews()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Không thể cập nhật đánh giá')
+    } finally { setEditSubmitting(false) }
   }
 
   return (
@@ -301,6 +317,8 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
             <motion.div key={review.id}
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className="p-5 bg-white dark:bg-dark-800 rounded-2xl border border-gray-100 dark:border-dark-700">
+
+              {/* Header */}
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-700 flex items-center justify-center flex-shrink-0">
@@ -316,10 +334,46 @@ function ReviewSection({ productId, rating: initialRating, reviewCount: initialC
                     <StarRating rating={review.rating} size="sm" showCount={false} className="mt-0.5" />
                   </div>
                 </div>
-                <span className="text-xs text-gray-400">{formatDate(review.createdAt)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">{formatDate(review.createdAt)}</span>
+                  {user?.id === review.userId && (
+                    <button
+                      onClick={() => setEditing({ id: review.id, rating: review.rating, comment: review.comment || '' })}
+                      className="text-xs text-primary hover:underline font-medium ml-1">
+                      Sửa
+                    </button>
+                  )}
+                </div>
               </div>
-              {review.comment && (
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mt-2 pl-12">{review.comment}</p>
+
+              {/* Inline edit form */}
+              {editing?.id === review.id ? (
+                <form onSubmit={handleEdit} className="mt-3 pl-12 space-y-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Chọn lại số sao:</p>
+                    <StarPicker value={editing.rating} onChange={v => setEditing(e => ({ ...e, rating: v }))} />
+                  </div>
+                  <textarea
+                    value={editing.comment}
+                    onChange={e => setEditing(prev => ({ ...prev, comment: e.target.value }))}
+                    rows={2}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-sm text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+                  />
+                  <div className="flex gap-2">
+                    <button type="submit" disabled={editSubmitting}
+                      className="px-4 py-1.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-700 disabled:opacity-60 transition">
+                      {editSubmitting ? 'Đang lưu...' : 'Lưu'}
+                    </button>
+                    <button type="button" onClick={() => setEditing(null)}
+                      className="px-4 py-1.5 rounded-xl text-sm font-bold border border-gray-200 dark:border-dark-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                      Huỷ
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                review.comment && (
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mt-2 pl-12">{review.comment}</p>
+                )
               )}
             </motion.div>
           ))}

@@ -1,7 +1,7 @@
 /**
  * src/modules/review/review.controller.js
  */
-import { listReviews, addReview, removeReview } from './review.service.js'
+import { listReviews, addReview, removeReview, editReview } from './review.service.js'
 import { successResponse, paginatedResponse } from '../../core/utils/response.js'
 
 export async function getReviewsController(req, res, next) {
@@ -28,5 +28,14 @@ export async function deleteReviewController(req, res, next) {
   try {
     await removeReview(req.params.id, req.user.id)
     return successResponse(res, null, 'Xoá đánh giá thành công')
+  } catch (err) { next(err) }
+}
+
+export async function updateReviewController(req, res, next) {
+  try {
+    const { rating, comment } = req.body
+    if (!rating) return res.status(400).json({ success: false, message: 'rating là bắt buộc' })
+    const review = await editReview(req.params.id, req.user.id, { rating, comment })
+    return successResponse(res, review, 'Cập nhật đánh giá thành công')
   } catch (err) { next(err) }
 }

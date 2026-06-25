@@ -1,7 +1,7 @@
 /**
  * src/modules/review/review.service.js
  */
-import { getProductReviews, findReview, createReview, deleteReview } from './review.repository.js'
+import { getProductReviews, findReview, createReview, deleteReview, updateReview } from './review.repository.js'
 import prisma from '../../configs/database.js'
 
 export async function listReviews(productId, { page, limit }) {
@@ -34,4 +34,13 @@ export async function addReview(userId, productId, rating, comment) {
 
 export async function removeReview(reviewId, userId) {
   return deleteReview(reviewId, userId)
+}
+
+export async function editReview(reviewId, userId, { rating, comment }) {
+  if (rating < 1 || rating > 5) {
+    const err = new Error('Đánh giá phải từ 1 đến 5 sao')
+    err.statusCode = 400
+    throw err
+  }
+  return updateReview(reviewId, userId, { rating, comment })
 }

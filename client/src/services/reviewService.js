@@ -19,6 +19,12 @@ export async function createReview(productId, { rating, comment }) {
   return res.data ?? res
 }
 
+/** Sửa đánh giá của mình */
+export async function updateReview(reviewId, { rating, comment }) {
+  const res = await api.put(`/reviews/${reviewId}`, { rating, comment })
+  return res.data ?? res
+}
+
 /** Xoá đánh giá của mình */
 export async function deleteReview(reviewId) {
   const res = await api.delete(`/reviews/${reviewId}`)

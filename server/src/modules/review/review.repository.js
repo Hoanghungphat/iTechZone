@@ -62,3 +62,30 @@ export async function deleteReview(id, userId) {
     data:  { rating: Math.round((_avg.rating ?? 0) * 10) / 10 },
   })
 }
+
+export async function updateReview(id, userId, { rating, comment }) {
+  const review = await prisma.review.findFirst({ where: { id, userId } })
+  if (!review) {
+    const err = new Error('Không tìm thấy đánh giá hoặc bạn không có quyền sửa')
+    err.statusCode = 404
+    throw err
+  }
+
+  const updated = await prisma.review.update({
+    where:   { id },
+    data:    { rating: Number(rating), comment },
+    include: { user: { select: { id: true, name: true, avatar: true } } },
+  })
+
+  // Cập nhật lại rating trung bình sản phẩm
+  const { _avg } = await prisma.review.aggregate({
+    where: { productId: review.productId },
+    _avg:  { rating: true },
+  })
+  await prisma.product.update({
+    where: { id: review.productId },
+    data:  { rating: Math.round((_avg.rating ?? 0) * 10) / 10 },
+  })
+
+  return updated
+}
