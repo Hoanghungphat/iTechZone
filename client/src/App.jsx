@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 
 import AppRoutes from '@/routes'
 import useThemeStore from '@/store/useThemeStore'
+import CookieConsent from '@/components/common/CookieConsent'
 
 function ThemeInitializer() {
   const { initTheme } = useThemeStore()
@@ -20,6 +21,9 @@ export default function App() {
     <BrowserRouter>
       {/* Khởi tạo theme */}
       <ThemeInitializer />
+
+      {/* Cookie Consent Banner */}
+      <CookieConsent />
 
       {/* Routes */}
       <AppRoutes />

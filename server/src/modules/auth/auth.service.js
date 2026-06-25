@@ -2,19 +2,24 @@
  * src/modules/auth/auth.service.js
  * Business logic: đăng ký, đăng nhập, lấy thông tin user
  */
-import bcrypt   from 'bcryptjs'
-import jwt      from 'jsonwebtoken'
-import prisma   from '../../configs/database.js'
+import bcrypt from 'bcryptjs'
+import jwt    from 'jsonwebtoken'
+import prisma from '../../configs/database.js'
 
-const SALT_ROUNDS = 12
-const JWT_SECRET  = process.env.JWT_SECRET || 'itechzone_secret_key'
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '7d'
+const SALT_ROUNDS    = 12
+const JWT_SECRET     = process.env.JWT_SECRET || 'itechzone_secret_key'
+const ACCESS_EXPIRES = '15m'        // access token: 15 phút
+const REFRESH_EXPIRES = '7d'        // refresh token: 7 ngày
 
 // ================================
 // HELPERS
 // ================================
-function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES })
+export function generateAccessToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_EXPIRES })
+}
+
+export function generateRefreshToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: REFRESH_EXPIRES })
 }
 
 function safeUser(user) {
@@ -40,9 +45,11 @@ export async function register({ name, email, phone, password }) {
     data: { name, email, phone, password: hashed },
   })
 
-  const token = generateToken({ id: user.id, email: user.email, role: user.role })
+  const tokenPayload = { id: user.id, email: user.email, role: user.role }
+  const accessToken  = generateAccessToken(tokenPayload)
+  const refreshToken = generateRefreshToken(tokenPayload)
 
-  return { user: safeUser(user), token }
+  return { user: safeUser(user), token: accessToken, refreshToken }
 }
 
 // ================================
@@ -69,9 +76,26 @@ export async function login({ email, password }) {
     throw err
   }
 
-  const token = generateToken({ id: user.id, email: user.email, role: user.role })
+  const tokenPayload = { id: user.id, email: user.email, role: user.role }
+  const accessToken  = generateAccessToken(tokenPayload)
+  const refreshToken = generateRefreshToken(tokenPayload)
 
-  return { user: safeUser(user), token }
+  return { user: safeUser(user), token: accessToken, refreshToken }
+}
+
+// ================================
+// REFRESH ACCESS TOKEN
+// ================================
+export async function refreshAccessToken(refreshToken) {
+  try {
+    const decoded = jwt.verify(refreshToken, JWT_SECRET)
+    const { iat, exp, ...payload } = decoded
+    return { token: generateAccessToken(payload) }
+  } catch {
+    const err = new Error('Refresh token không hợp lệ hoặc đã hết hạn')
+    err.statusCode = 401
+    throw err
+  }
 }
 
 // ================================

@@ -4,6 +4,7 @@
 import express from 'express'
 import cors    from 'cors'
 import morgan  from 'morgan'
+import cookieParser from 'cookie-parser'
 
 import productRoutes              from './modules/product/product.routes.js'
 import authRoutes                 from './modules/auth/auth.routes.js'
@@ -32,17 +33,17 @@ app.use(cors({
       'http://127.0.0.1:5174',
     ].filter(Boolean)
 
-    // Cho phép mọi subdomain của vercel.app
     const isVercel = origin?.endsWith('.vercel.app')
 
     if (allowedOrigins.includes(origin) || isVercel) return callback(null, true)
     return callback(new Error('Not allowed by CORS'))
   },
-  credentials: true,
+  credentials: true,   // ← bắt buộc để cookie cross-origin hoạt động
 }))
 
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+app.use(cookieParser())
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'))

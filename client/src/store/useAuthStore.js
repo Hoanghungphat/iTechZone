@@ -39,7 +39,8 @@ const useAuthStore = create(
       login: async (email, password) => {
         set({ isLoading: true, error: null })
         try {
-          const { user, token } = await loginService(email, password)
+          const rememberMe = localStorage.getItem('itechzone_cookie_consent') === 'true'
+          const { user, token } = await loginService(email, password, rememberMe)
           localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
           set({ user, token, isLoading: false })
 
@@ -72,7 +73,8 @@ const useAuthStore = create(
       register: async (userData) => {
         set({ isLoading: true, error: null })
         try {
-          const { user, token } = await registerService(userData)
+          const rememberMe = localStorage.getItem('itechzone_cookie_consent') === 'true'
+          const { user, token } = await registerService({ ...userData, rememberMe })
           localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
           set({ user, token, isLoading: false })
 
