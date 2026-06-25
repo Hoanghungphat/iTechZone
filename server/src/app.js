@@ -15,7 +15,7 @@ import adminRoutes                from './modules/admin/admin.routes.js'
 import { productReviewRouter, reviewRouter } from './modules/review/review.routes.js'
 import { bannerPublicRouter, bannerAdminRouter } from './modules/banner/banner.routes.js'
 import { errorHandler, notFound } from './core/middlewares/error.middleware.js'
-import { seedSystemAccounts }     from './modules/admin/admin.service.js'
+import { seedSystemAccounts, seedDefaultBanners } from './modules/admin/admin.service.js'
 
 const app = express()
 
@@ -52,6 +52,8 @@ if (process.env.NODE_ENV === 'development') {
 
 // Seed admin & staff accounts từ .env
 seedSystemAccounts().catch(console.error)
+// Seed banner mặc định nếu DB trống
+seedDefaultBanners().catch(console.error)
 
 // ================================
 // ROUTES
