@@ -1,12 +1,13 @@
 /**
  * pages/Admin/Banners/index.jsx — Quản lý Banner trang chủ
  */
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Image, X, Check } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Image, X, Check, Search } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import useAdminStore from '@/store/useAdminStore'
 import { getAdminBanners, createBanner, updateBanner, deleteBanner } from '@/services/bannerService'
 import { formatPrice } from '@/utils/format'
+import api from '@/services/api'
 
 const GRADIENTS = [
   { label: 'Đỏ tối', value: 'from-dark-900 via-dark-800 to-dark-900' },
@@ -28,9 +29,16 @@ export default function AdminBanners() {
   const [banners, setBanners]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing]   = useState(null)   // banner đang sửa
+  const [editing, setEditing]   = useState(null)
   const [form, setForm]         = useState(EMPTY_FORM)
   const [saving, setSaving]     = useState(false)
+
+  // Product search
+  const [search, setSearch]         = useState('')
+  const [searchResults, setResults] = useState([])
+  const [searching, setSearching]   = useState(false)
+  const [showDrop, setShowDrop]     = useState(false)
+  const searchRef                   = useRef(null)
 
   const load = async () => {
     try {
@@ -43,11 +51,42 @@ export default function AdminBanners() {
 
   useEffect(() => { load() }, [])
 
-  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setShowForm(true) }
+  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setSearch(''); setResults([]); setShowForm(true) }
   const openEdit   = (b) => {
     setEditing(b)
     setForm({ tag: b.tag, title: b.title, subtitle: b.subtitle, price: b.price, originalPrice: b.originalPrice, ctaText: b.ctaText, href: b.href, image: b.image, gradient: b.gradient, accent: b.accent, isActive: b.isActive, sortOrder: b.sortOrder })
+    setSearch('')
+    setResults([])
     setShowForm(true)
+  }
+
+  // Tìm sản phẩm theo keyword
+  useEffect(() => {
+    if (!search.trim()) { setResults([]); return }
+    const t = setTimeout(async () => {
+      try {
+        setSearching(true)
+        const data = await api.get('/products', { params: { search: search.trim(), limit: 6 } })
+        const list = Array.isArray(data) ? data : (data?.data?.products ?? data?.products ?? [])
+        setResults(list)
+        setShowDrop(true)
+      } catch { setResults([]) }
+      finally { setSearching(false) }
+    }, 350)
+    return () => clearTimeout(t)
+  }, [search])
+
+  const pickProduct = (p) => {
+    setForm(prev => ({
+      ...prev,
+      href:          `/san-pham/${p.slug}`,
+      image:         p.thumbnail || p.image || prev.image,
+      price:         p.price         ?? prev.price,
+      originalPrice: p.originalPrice ?? prev.originalPrice,
+      title:         prev.title || p.name,
+    }))
+    setSearch(p.name)
+    setShowDrop(false)
   }
 
   const handleSave = async (e) => {
@@ -224,10 +263,49 @@ export default function AdminBanners() {
                 )}
               </div>
 
+              {/* Product picker */}
+              <div className="relative" ref={searchRef}>
+                <label className="text-xs text-slate-400 mb-1 block">
+                  Chọn sản phẩm
+                  <span className="ml-1 text-slate-500">(tự điền link, ảnh, giá)</span>
+                </label>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setShowDrop(true) }}
+                    onFocus={() => search && setShowDrop(true)}
+                    placeholder="Gõ tên sản phẩm để tìm..."
+                    className="w-full pl-8 pr-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500"
+                  />
+                  {searching && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">...</span>}
+                </div>
+
+                {showDrop && searchResults.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full bg-slate-800 border border-slate-600 rounded-xl shadow-2xl overflow-hidden">
+                    {searchResults.map(p => (
+                      <button key={p.id} type="button"
+                        onClick={() => pickProduct(p)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700 transition text-left">
+                        <img src={p.thumbnail || p.image} alt={p.name}
+                          onError={e => e.target.style.display='none'}
+                          className="w-10 h-10 object-contain rounded-lg bg-slate-900 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{p.name}</p>
+                          <p className="text-red-400 text-xs font-bold">{formatPrice(p.price)}</p>
+                        </div>
+                        <Check size={14} className="text-slate-500 flex-shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Href hiển thị (readonly sau khi chọn, có thể sửa tay) */}
               <div>
                 <label className="text-xs text-slate-400 mb-1 block">Link sản phẩm (href)</label>
-                <input value={form.href} onChange={f('href')} placeholder="/san-pham/samsung-..."
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500" />
+                <input value={form.href} onChange={f('href')} placeholder="/san-pham/..."
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 font-mono" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
