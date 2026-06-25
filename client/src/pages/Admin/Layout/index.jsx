@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Users, ShoppingBag,
-  ClipboardList, UserCog, LogOut, Shield, Menu, X, ChevronRight, Home, Activity, KeyRound
+  ClipboardList, UserCog, LogOut, Shield, Menu, X, ChevronRight, Home, KeyRound
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import useAdminStore from '@/store/useAdminStore'
@@ -18,7 +18,6 @@ const NAV_ADMIN = [
   { to: '/admin/staff',           icon: UserCog,          label: 'Nhân viên' },
   { to: '/admin/requests',        icon: ClipboardList,    label: 'Duyệt yêu cầu' },
   { to: '/admin/password-resets', icon: KeyRound,         label: 'Quên Mật Khẩu' },
-  { to: '/admin/logs',            icon: Activity,         label: 'Lịch sử HĐ' },
 ]
 
 const NAV_STAFF = [
