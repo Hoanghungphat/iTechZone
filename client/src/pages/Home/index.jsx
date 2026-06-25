@@ -42,7 +42,7 @@ function HeroBanner() {
       originalPrice: 37_990_000,
       cta: 'Mua ngay',
       href: '/san-pham/apple-iphone-15-pro-max-256gb',
-      image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&h=500&fit=crop&auto=format',
+      image: 'https://cdn2.cellphones.com.vn/insecure/rs:fill:358:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/iphone-15-pro-max_1__1.png',
       gradient: 'from-dark-900 via-dark-800 to-dark-900',
       accent: '#e51c1c',
     },
@@ -55,7 +55,7 @@ function HeroBanner() {
       originalPrice: 34_990_000,
       cta: 'Khám phá',
       href: '/san-pham/samsung-galaxy-s24-ultra-256gb',
-      image: 'https://images.unsplash.com/photo-1706041473788-d0f879f80b21?w=500&h=500&fit=crop&auto=format',
+      image: 'https://cdn2.cellphones.com.vn/insecure/rs:fill:358:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/s/a/samsung-galaxy-s24-ultra_1.png',
       gradient: 'from-dark-900 via-blue-950 to-dark-900',
       accent: '#1d4ed8',
     },
@@ -68,7 +68,7 @@ function HeroBanner() {
       originalPrice: 28_990_000,
       cta: 'Tìm hiểu thêm',
       href: '/san-pham/apple-ipad-pro-m4-11-inch-256gb-wifi',
-      image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500&h=500&fit=crop&auto=format',
+      image: 'https://cdn2.cellphones.com.vn/insecure/rs:fill:358:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-pro-m4-11-inch_1.png',
       gradient: 'from-dark-900 via-indigo-950 to-dark-900',
       accent: '#6366f1',
     },
@@ -169,6 +169,7 @@ function HeroBanner() {
               <img
                 src={slide.image}
                 alt={slide.title}
+                onError={(e) => { e.target.style.display = 'none' }}
                 className="relative z-10 w-72 h-72 md:w-96 md:h-96 object-contain drop-shadow-2xl animate-float"
               />
             </div>
