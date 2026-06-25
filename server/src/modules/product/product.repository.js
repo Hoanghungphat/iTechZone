@@ -102,11 +102,23 @@ export async function findProducts({
 }
 
 export async function findProductById(id) {
-  return prisma.product.findUnique({ where: { id } })
+  const p = await prisma.product.findUnique({
+    where:   { id },
+    include: { _count: { select: { reviews: true } } },
+  })
+  if (!p) return null
+  const { _count, ...rest } = p
+  return { ...rest, reviewCount: _count.reviews }
 }
 
 export async function findProductBySlug(slug) {
-  return prisma.product.findUnique({ where: { slug } })
+  const p = await prisma.product.findUnique({
+    where:   { slug },
+    include: { _count: { select: { reviews: true } } },
+  })
+  if (!p) return null
+  const { _count, ...rest } = p
+  return { ...rest, reviewCount: _count.reviews }
 }
 
 export async function findRelatedProducts(productId, limit = 6) {
