@@ -13,6 +13,7 @@ import cartRoutes                 from './modules/cart/cart.routes.js'
 import orderRoutes                from './modules/order/order.routes.js'
 import adminRoutes                from './modules/admin/admin.routes.js'
 import { productReviewRouter, reviewRouter } from './modules/review/review.routes.js'
+import { bannerPublicRouter, bannerAdminRouter } from './modules/banner/banner.routes.js'
 import { errorHandler, notFound } from './core/middlewares/error.middleware.js'
 import { seedSystemAccounts }     from './modules/admin/admin.service.js'
 
@@ -77,7 +78,9 @@ app.use('/api/products/:productId/reviews', productReviewRouter)
 app.use('/api/cart',                        cartRoutes)
 app.use('/api/orders',                      orderRoutes)
 app.use('/api/reviews',                     reviewRouter)
+app.use('/api/banners',                     bannerPublicRouter)
 app.use('/api/admin',                       adminRoutes)
+app.use('/api/admin/banners',               bannerAdminRouter)
 
 // ================================
 // ERROR HANDLING

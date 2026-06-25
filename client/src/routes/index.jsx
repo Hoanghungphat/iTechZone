@@ -39,6 +39,7 @@ const AdminRequests  = lazy(() => import('@/pages/Admin/Requests'))
 const AdminStaff     = lazy(() => import('@/pages/Admin/Staff'))
 const AdminLogs          = lazy(() => import('@/pages/Admin/AuditLog'))
 const AdminPasswordResets = lazy(() => import('@/pages/Admin/PasswordResets'))
+const AdminBanners        = lazy(() => import('@/pages/Admin/Banners'))
 const ForgotPasswordPage  = lazy(() => import('@/pages/ForgotPassword'))
 
 // Loading fallback khi lazy load
@@ -137,6 +138,7 @@ export default function AppRoutes() {
           <Route path="staff"           element={<AdminStaff />} />
           <Route path="logs"            element={<AdminLogs />} />
           <Route path="password-resets" element={<AdminPasswordResets />} />
+          <Route path="banners"         element={<AdminBanners />} />
         </Route>
       </Routes>
     </Suspense>

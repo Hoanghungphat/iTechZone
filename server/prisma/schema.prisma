@@ -246,3 +246,26 @@ model PasswordResetRequest {
   @@index([status])
   @@index([createdAt])
 }
+
+// ================================
+// BANNER (trang chủ)
+// ================================
+model Banner {
+  id            String   @id @default(cuid())
+  tag           String                               // VD: "Galaxy AI"
+  title         String                               // VD: "Samsung S24 Ultra"
+  subtitle      String   @default("")
+  price         Int      @default(0)
+  originalPrice Int      @default(0)
+  ctaText       String   @default("Khám phá")
+  href          String   @default("/")
+  image         String   @default("")
+  gradient      String   @default("from-dark-900 via-dark-800 to-dark-900")
+  accent        String   @default("#e51c1c")
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("banners")
+}

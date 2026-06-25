@@ -21,6 +21,7 @@ import {
 } from '@/services/productService'
 import { formatPrice } from '@/utils/format'
 import { ROUTES } from '@/constants'
+import { getPublicBanners } from '@/services/bannerService'
 
 
 // Flash sale end time (24h từ bây giờ — mock)
@@ -31,55 +32,30 @@ const FLASH_SALE_END = new Date(Date.now() + 8 * 60 * 60 * 1000)
 // ============================================
 function HeroBanner() {
   const [currentSlide, setCurrentSlide] = useState(0)
-
-  const slides = [
-    {
-      id: 0,
-      tag: 'Mới ra mắt',
-      title: 'iPhone 15 Pro Max',
-      subtitle: 'Chip A17 Pro · Camera 48MP · Titanium',
-      price: 34_990_000,
-      originalPrice: 37_990_000,
-      cta: 'Mua ngay',
-      href: '/san-pham/apple-iphone-15-pro-max-256gb',
-      image: 'https://cdn2.cellphones.com.vn/insecure/rs:fill:358:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/iphone-15-pro-max_1__1.png',
-      gradient: 'from-dark-900 via-dark-800 to-dark-900',
-      accent: '#e51c1c',
-    },
-    {
-      id: 1,
-      tag: 'Galaxy AI',
-      title: 'Samsung S24 Ultra',
-      subtitle: 'S Pen · 200MP · Snapdragon 8 Gen 3',
-      price: 31_990_000,
-      originalPrice: 34_990_000,
-      cta: 'Khám phá',
-      href: '/san-pham/samsung-galaxy-s24-ultra-256gb',
-      image: 'https://cdn2.cellphones.com.vn/insecure/rs:fill:358:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/s/a/samsung-galaxy-s24-ultra_1.png',
-      gradient: 'from-dark-900 via-blue-950 to-dark-900',
-      accent: '#1d4ed8',
-    },
-    {
-      id: 2,
-      tag: 'iPad Pro M4',
-      title: 'Mỏng nhất từ trước đến nay',
-      subtitle: 'Chip M4 · Màn hình OLED · Ultra Retina XDR',
-      price: 26_990_000,
-      originalPrice: 28_990_000,
-      cta: 'Tìm hiểu thêm',
-      href: '/san-pham/apple-ipad-pro-m4-11-inch-256gb-wifi',
-      image: 'https://cdn2.cellphones.com.vn/insecure/rs:fill:358:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/i/p/ipad-pro-m4-11-inch_1.png',
-      gradient: 'from-dark-900 via-indigo-950 to-dark-900',
-      accent: '#6366f1',
-    },
-  ]
+  const [slides, setSlides] = useState([])
+  const [loadingSlides, setLoadingSlides] = useState(true)
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide(p => (p + 1) % slides.length)
-    }, 5000)
-    return () => clearInterval(timer)
+    getPublicBanners()
+      .then(data => {
+        const list = Array.isArray(data) ? data : (data?.data ?? [])
+        setSlides(list)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSlides(false))
   }, [])
+
+  useEffect(() => {
+    if (slides.length === 0) return
+    const timer = setInterval(() =>
+      setCurrentSlide(p => (p + 1) % slides.length)
+    , 5000)
+    return () => clearInterval(timer)
+  }, [slides])
+
+  if (loadingSlides || slides.length === 0) {
+    return <div className="min-h-[560px] bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900 animate-pulse" />
+  }
 
   const slide = slides[currentSlide]
 
@@ -140,7 +116,7 @@ function HeroBanner() {
                            shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 style={{ background: `linear-gradient(135deg, ${slide.accent}, ${slide.accent}cc)` }}
               >
-                {slide.cta}
+                {slide.ctaText || slide.cta}
                 <ArrowRight size={18} />
               </Link>
               <Link
