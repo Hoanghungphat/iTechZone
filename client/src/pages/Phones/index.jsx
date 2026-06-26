@@ -116,9 +116,19 @@ export default function Phones() {
 
           {/* Nội dung chính */}
           <div className="flex-1 min-w-0">
-            {/* Thanh sắp xếp */}
+            {/* Thanh sắp xếp + Mobile filter button */}
             <div className="bg-white dark:bg-dark-800 rounded-2xl p-4 mb-6
-                            border border-gray-100 dark:border-dark-700">
+                            border border-gray-100 dark:border-dark-700
+                            flex items-center justify-between gap-3">
+              <button
+                onClick={() => setShowMobileFilter(true)}
+                className="lg:hidden flex items-center gap-2 px-4 py-2 rounded-xl
+                           border border-gray-200 dark:border-dark-600
+                           bg-white dark:bg-dark-700 text-sm font-medium
+                           text-gray-700 dark:text-gray-300"
+              >
+                <SlidersHorizontal size={16} /> Bộ lọc
+              </button>
               <ProductSort value={sort} onChange={(v) => { setSort(v); setPage(1) }} total={total} />
             </div>
 
