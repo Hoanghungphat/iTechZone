@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { SlidersHorizontal, X } from 'lucide-react'
+import { SlidersHorizontal, X, Smartphone } from 'lucide-react'
 
 import ProductGrid from '@/components/product/ProductGrid'
 import ProductFilter from '@/components/product/ProductFilter'
@@ -72,27 +72,32 @@ export default function Phones() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Page Header */}
-      <div className="bg-white dark:bg-dark-900 border-b border-gray-100 dark:border-dark-800 py-5">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-950">
+      {/* Breadcrumb */}
+      <div className="bg-white dark:bg-dark-900 border-b border-gray-100 dark:border-dark-800 py-4">
         <div className="container-custom">
           <Breadcrumb items={[{ label: 'Điện thoại', href: '/dien-thoai' }]} />
-          <div className="flex items-center justify-between mt-3">
+        </div>
+      </div>
+
+      {/* Hero Banner */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 py-10">
+        <div className="container-custom text-white">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-4"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Smartphone size={28} />
+            </div>
             <div>
-              <h1 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Điện thoại</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                Khám phá {total} sản phẩm chính hãng
+              <h1 className="text-3xl font-black">Điện thoại chính hãng</h1>
+              <p className="text-blue-100 mt-1">
+                Apple, Samsung, Xiaomi, Oppo, Vivo — {total > 0 ? `${total} sản phẩm` : ''}
               </p>
             </div>
-            <button
-              onClick={() => setShowMobileFilter(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-800
-                         border border-gray-200 dark:border-dark-700 rounded-xl text-sm font-semibold
-                         text-gray-700 dark:text-gray-300"
-            >
-              <SlidersHorizontal size={16} /> Bộ lọc
-            </button>
-          </div>
+          </motion.div>
         </div>
       </div>
 
