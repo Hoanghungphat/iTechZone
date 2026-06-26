@@ -2,7 +2,7 @@
  * pages/Admin/Products/ProductForm.jsx — Form thêm/sửa sản phẩm
  */
 import { useState } from 'react'
-import { X, Package, Plus, Trash2 } from 'lucide-react'
+import { X, Package, Plus, Trash2, Cpu } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { createProduct, updateProduct } from '@/services/adminService'
 
@@ -18,6 +18,22 @@ const BRANDS_MAP = {
   'phu-kien':      ['apple', 'samsung', 'anker', 'baseus'],
 }
 
+// Gợi ý tên thông số theo danh mục
+const SPECS_PRESETS = {
+  'dien-thoai': [
+    'Màn hình', 'Chip xử lý', 'RAM', 'Bộ nhớ trong', 'Camera sau',
+    'Camera trước', 'Pin', 'Hệ điều hành', 'Kết nối', 'Kích thước',
+  ],
+  'may-tinh-bang': [
+    'Màn hình', 'Chip xử lý', 'RAM', 'Bộ nhớ trong', 'Camera',
+    'Pin', 'Hệ điều hành', 'Kết nối', 'Kích thước', 'Trọng lượng',
+  ],
+  'phu-kien': [
+    'Chất liệu', 'Tương thích', 'Công suất', 'Cổng kết nối',
+    'Kích thước', 'Trọng lượng', 'Bảo hành',
+  ],
+}
+
 function Field({ label, children }) {
   return (
     <div>
@@ -28,6 +44,21 @@ function Field({ label, children }) {
 }
 
 const INPUT = "w-full px-3 py-2.5 bg-slate-700/60 border border-slate-600 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-red-500 transition-colors"
+
+/** Chuyển object specs → array [{key,val}] để edit */
+function specsToRows(specs) {
+  if (!specs || typeof specs !== 'object') return []
+  return Object.entries(specs).map(([key, val]) => ({ key, val: String(val) }))
+}
+
+/** Chuyển array [{key,val}] → object */
+function rowsToSpecs(rows) {
+  const obj = {}
+  rows.forEach(({ key, val }) => {
+    if (key.trim()) obj[key.trim()] = val
+  })
+  return obj
+}
 
 export default function ProductForm({ product, onClose, onSuccess }) {
   const isEdit = !!product
@@ -51,8 +82,23 @@ export default function ProductForm({ product, onClose, onSuccess }) {
     variants:      Array.isArray(product?.variants) ? product.variants : [],
   })
 
+  // Specs dạng array [{key, val}] để dễ thao tác trong UI
+  const [specRows, setSpecRows] = useState(() => specsToRows(product?.specs))
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  /* ── Helpers specs ── */
+  const addSpecRow = (keyPreset = '') => {
+    setSpecRows(prev => [...prev, { key: keyPreset, val: '' }])
+  }
+  const updateSpecRow = (idx, field, value) => {
+    setSpecRows(prev => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r))
+  }
+  const removeSpecRow = (idx) => {
+    setSpecRows(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  /* ── Submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.name || !form.price || !form.category) {
@@ -61,6 +107,7 @@ export default function ProductForm({ product, onClose, onSuccess }) {
     }
     setLoading(true)
     try {
+      const specs = rowsToSpecs(specRows)
       const payload = {
         ...form,
         price:         Number(form.price),
@@ -68,7 +115,7 @@ export default function ProductForm({ product, onClose, onSuccess }) {
         stock:         Number(form.stock),
         images:        form.images.filter(url => url.trim() !== ''),
         image:         form.images.find(url => url.trim() !== '') || '',
-        // Convert số trong từng variant
+        specs:         Object.keys(specs).length > 0 ? specs : null,
         variants:      form.variants
           .filter(v => v.color.trim() !== '')
           .map(v => ({
@@ -92,6 +139,9 @@ export default function ProductForm({ product, onClose, onSuccess }) {
       setLoading(false)
     }
   }
+
+  const presets = SPECS_PRESETS[form.category] || []
+  const usedKeys = specRows.map(r => r.key)
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/50 backdrop-blur-sm">
@@ -187,7 +237,7 @@ export default function ProductForm({ product, onClose, onSuccess }) {
             </Field>
           </div>
 
-          {/* Badges */}
+          {/* Tags */}
           <div>
             <label className="text-slate-300 text-xs font-medium mb-2 block">Tags hiển thị</label>
             <div className="grid grid-cols-2 gap-2">
@@ -198,6 +248,89 @@ export default function ProductForm({ product, onClose, onSuccess }) {
                   <span className="text-slate-300 text-sm">{lbl}</span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          {/* ─── THÔNG SỐ KỸ THUẬT ─── */}
+          <div className="border border-slate-700 rounded-2xl overflow-hidden">
+            {/* Section header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-700/40 border-b border-slate-700">
+              <div className="flex items-center gap-2">
+                <Cpu size={14} className="text-blue-400" />
+                <span className="text-slate-200 text-xs font-semibold uppercase tracking-wide">Thông số kỹ thuật</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => addSpecRow()}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-medium transition-colors"
+              >
+                <Plus size={12} /> Thêm dòng
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* Gợi ý nhanh */}
+              {presets.length > 0 && (
+                <div>
+                  <p className="text-slate-500 text-xs mb-2">Chọn nhanh:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {presets.map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        disabled={usedKeys.includes(p)}
+                        onClick={() => addSpecRow(p)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
+                          ${usedKeys.includes(p)
+                            ? 'bg-slate-700/30 text-slate-600 cursor-not-allowed'
+                            : 'bg-slate-700 hover:bg-blue-600/30 text-slate-300 hover:text-blue-300'
+                          }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bảng thông số */}
+              {specRows.length === 0 ? (
+                <p className="text-slate-500 text-xs text-center py-4 bg-slate-700/20 rounded-xl">
+                  Chưa có thông số — nhấn "Thêm dòng" hoặc chọn nhanh bên trên
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {/* Header row */}
+                  <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-1">
+                    <span className="text-slate-500 text-xs">Tên thông số</span>
+                    <span className="text-slate-500 text-xs">Giá trị</span>
+                    <span className="w-7" />
+                  </div>
+                  {specRows.map((row, idx) => (
+                    <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                      <input
+                        className={INPUT}
+                        value={row.key}
+                        onChange={e => updateSpecRow(idx, 'key', e.target.value)}
+                        placeholder="VD: RAM"
+                      />
+                      <input
+                        className={INPUT}
+                        value={row.val}
+                        onChange={e => updateSpecRow(idx, 'val', e.target.value)}
+                        placeholder="VD: 8 GB"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSpecRow(idx)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-red-600/30 text-slate-400 hover:text-red-400 transition-colors flex-shrink-0"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
