@@ -126,6 +126,15 @@ const useAuthStore = create(
        * Xóa lỗi
        */
       clearError: () => set({ error: null }),
+
+      /**
+       * Hydrate user auth từ admin login (dùng khi admin/staff đăng nhập qua admin panel)
+       * Đảm bảo họ được nhận diện là đã đăng nhập khi vào trang chủ
+       */
+      hydrate: (user, token) => {
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
+        set({ user, token, isLoading: false, error: null })
+      },
     }),
     {
       name: STORAGE_KEYS.USER,

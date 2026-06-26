@@ -17,6 +17,7 @@ import CartDrawer from '@/components/cart/CartDrawer'
 import useCartStore from '@/store/useCartStore'
 import useThemeStore from '@/store/useThemeStore'
 import useAuthStore from '@/store/useAuthStore'
+import useAdminStore from '@/store/useAdminStore'
 import { PHONE_BRANDS, TABLET_BRANDS, ROUTES } from '@/constants'
 import { getBestsellerProducts } from '@/services/productService'
 
@@ -93,13 +94,16 @@ export default function Header() {
   const { items, openDrawer } = useCartStore()
   const { theme, toggleTheme } = useThemeStore()
   const { user, token, logout } = useAuthStore()
+  const { admin } = useAdminStore()
 
-  // Tính isLoggedIn trực tiếp từ state — reactive hơn getter
-  const isLoggedIn = !!token && !!user
+  // Nếu staff/admin đang xem trang chủ qua "Về trang chủ" thì hiển thị thông tin của họ
+  const effectiveUser = user || (admin ? admin : null)
+  const isLoggedIn    = !!(token && user) || !!admin
+  const isAdminViewing = !user && !!admin  // admin ghé homepage, không có user token
 
   // Avatar fallback khi không có ảnh
-  const avatarUrl = user?.avatar
-    || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'U')}&background=e51c1c&color=fff`
+  const avatarUrl = effectiveUser?.avatar
+    || `https://ui-avatars.com/api/?name=${encodeURIComponent(effectiveUser?.name || 'U')}&background=e51c1c&color=fff`
 
   const handleLogout = async () => {
     await logout()
@@ -365,37 +369,63 @@ export default function Header() {
                   <button className="flex items-center gap-2 px-3 py-2 rounded-xl
                                      text-sm font-medium text-gray-700 dark:text-gray-300
                                      hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors">
-                    <img src={avatarUrl} alt={user?.name}
+                    <img src={avatarUrl} alt={effectiveUser?.name}
                          className="w-7 h-7 rounded-full object-cover" />
-                    <span className="max-w-[80px] truncate">{user?.name}</span>
+                    <span className="max-w-[80px] truncate">{effectiveUser?.name}</span>
+                    {isAdminViewing && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
+                        {admin?.role === 'admin' ? 'Admin' : 'NV'}
+                      </span>
+                    )}
                   </button>
                   <div className="absolute right-0 top-full pt-2 hidden group-hover:block z-50">
-                    <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-xl border border-gray-100 dark:border-dark-700 p-2 min-w-[180px]">
-                      {/* Nút trang quản lý — chỉ admin/staff */}
-                      {(user?.role === 'admin' || user?.role === 'staff') && (
+                    <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-xl border border-gray-100 dark:border-dark-700 p-2 min-w-[200px]">
+                      {isAdminViewing ? (
+                        // Admin/Staff đang xem trang chủ — hiển thị menu quản trị
                         <>
-                          <Link to="/admin"
-                                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
-                            <LayoutDashboard size={15} /> Trang quản lý
+                          <div className="px-3 py-2 mb-1">
+                            <p className="text-xs text-gray-400">Xem trước với tư cách</p>
+                            <p className="text-sm font-bold text-gray-800 dark:text-white truncate">{effectiveUser?.name}</p>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                              {admin?.role === 'admin' ? '👑 Admin' : '🧑‍💼 Nhân viên'}
+                            </span>
+                          </div>
+                          <hr className="my-1 border-gray-100 dark:border-dark-700" />
+                          <a href="/admin/dashboard"
+                             className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
+                            <LayoutDashboard size={15} /> Quay lại Admin Panel
+                          </a>
+                        </>
+                      ) : (
+                        // User thường hoặc admin/staff đăng nhập qua user login
+                        <>
+                          {/* Nút trang quản lý — chỉ admin/staff */}
+                          {(effectiveUser?.role === 'admin' || effectiveUser?.role === 'staff') && (
+                            <>
+                              <a href="/admin/dashboard"
+                                 className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-primary hover:bg-primary/10 transition-colors">
+                                <LayoutDashboard size={15} /> Trang quản lý
+                              </a>
+                              <hr className="my-1 border-gray-100 dark:border-dark-700" />
+                            </>
+                          )}
+                          <Link to="/tai-khoan"
+                                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 hover:text-primary transition-colors">
+                            <User size={15} /> Tài khoản
+                          </Link>
+                          <Link to="/tai-khoan/don-hang"
+                                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 hover:text-primary transition-colors">
+                            <Package size={15} /> Đơn hàng
                           </Link>
                           <hr className="my-1 border-gray-100 dark:border-dark-700" />
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 w-full transition-colors"
+                          >
+                            <LogOut size={15} /> Đăng xuất
+                          </button>
                         </>
                       )}
-                      <Link to="/tai-khoan"
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 hover:text-primary transition-colors">
-                        <User size={15} /> Tài khoản
-                      </Link>
-                      <Link to="/tai-khoan/don-hang"
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 hover:text-primary transition-colors">
-                        <Package size={15} /> Đơn hàng
-                      </Link>
-                      <hr className="my-1 border-gray-100 dark:border-dark-700" />
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 w-full transition-colors"
-                      >
-                        <LogOut size={15} /> Đăng xuất
-                      </button>
                     </div>
                   </div>
                 </div>

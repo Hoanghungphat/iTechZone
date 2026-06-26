@@ -1,7 +1,7 @@
 /**
  * pages/Admin/Layout/index.jsx — Sidebar + Header cho Admin Panel
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, Users, ShoppingBag,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import useAdminStore from '@/store/useAdminStore'
+import useAuthStore from '@/store/useAuthStore'
 
 const NAV_ADMIN = [
   { to: '/admin/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
@@ -32,10 +33,20 @@ const NAV_STAFF = [
 
 export default function AdminLayout() {
   const navigate = useNavigate()
-  const { admin, logout } = useAdminStore()
+  const { admin, token, logout } = useAdminStore()
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const nav = admin?.role === 'admin' ? NAV_ADMIN : NAV_STAFF
+
+  // Khi layout mount: nếu admin đã đăng nhập nhưng useAuthStore chưa có
+  // → hydrate để nhân viên/admin được nhận diện trên trang chủ
+  const { hydrate, user: authUser } = useAuthStore()
+  useEffect(() => {
+    if (admin && token && !authUser) {
+      hydrate(admin, token)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [admin, token])
 
   const handleLogout = () => {
     logout()

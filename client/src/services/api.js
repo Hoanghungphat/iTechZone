@@ -94,6 +94,14 @@ api.interceptors.response.use(
 
 function clearAndRedirect() {
   localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+  // Nếu admin/staff đang xem trang chủ → không redirect vào /dang-nhap
+  try {
+    const adminState = JSON.parse(localStorage.getItem('itechzone_admin') || '{}')
+    if (adminState?.state?.token) {
+      localStorage.removeItem(STORAGE_KEYS.USER)
+      return
+    }
+  } catch { /* ignore */ }
   localStorage.removeItem(STORAGE_KEYS.USER)
   if (window.location.pathname !== '/dang-nhap') {
     window.location.href = '/dang-nhap'
