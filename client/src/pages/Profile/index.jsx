@@ -224,25 +224,7 @@ function PasswordTab() {
     }
   }
 
-  const PwdField = ({ label, field, key: k }) => (
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
-      <div className="relative">
-        <input
-          type={show[k] ? 'text' : 'password'}
-          value={form[field]}
-          onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
-          className="w-full pr-10 px-4 py-3 rounded-2xl border border-gray-200 dark:border-dark-600
-                     bg-white dark:bg-dark-700 text-gray-900 dark:text-white text-sm
-                     focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-        />
-        <button type="button" onClick={() => setShow(s => ({ ...s, [k]: !s[k] }))}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-          {show[k] ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
-      </div>
-    </div>
-  )
+  const cls = "w-full pr-10 px-4 py-3 rounded-2xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
 
   return (
     <div className="max-w-md">
@@ -250,9 +232,39 @@ function PasswordTab() {
         <Lock size={18} className="text-primary" /> Đổi mật khẩu
       </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <PwdField label="Mật khẩu hiện tại" field="currentPassword" k="cur" />
-        <PwdField label="Mật khẩu mới" field="newPassword" k="new" />
-        <PwdField label="Xác nhận mật khẩu mới" field="confirmPassword" k="confirm" />
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Mật khẩu hiện tại</label>
+          <div className="relative">
+            <input type={show.cur ? 'text' : 'password'} value={form.currentPassword}
+              onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))} className={cls} />
+            <button type="button" onClick={() => setShow(s => ({ ...s, cur: !s.cur }))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              {show.cur ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Mật khẩu mới</label>
+          <div className="relative">
+            <input type={show.new ? 'text' : 'password'} value={form.newPassword}
+              onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} className={cls} />
+            <button type="button" onClick={() => setShow(s => ({ ...s, new: !s.new }))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              {show.new ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Xác nhận mật khẩu mới</label>
+          <div className="relative">
+            <input type={show.confirm ? 'text' : 'password'} value={form.confirmPassword}
+              onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} className={cls} />
+            <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              {show.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
         <button type="submit" disabled={loading}
           className="w-full py-3 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-primary-700 disabled:opacity-60 transition shadow-primary">
           {loading ? 'Đang lưu...' : 'Cập nhật mật khẩu'}
@@ -262,10 +274,6 @@ function PasswordTab() {
   )
 }
 
-
-/**
- * Tab địa chỉ - quản lý danh sách địa chỉ giao hàng
- */
 function AddressTab({ user }) {
   return (
     <div className="space-y-4">
