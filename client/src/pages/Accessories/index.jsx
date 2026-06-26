@@ -163,7 +163,7 @@ export default function Accessories() {
                 <Pagination
                   currentPage={page}
                   totalPages={totalPages}
-                  onPageChange={setPage}
+                  onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
                 />
               </div>
             )}

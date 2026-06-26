@@ -30,6 +30,8 @@ const MEGA_MENU_CONFIG = [
     icon: Smartphone,
     brands: PHONE_BRANDS,
     category: 'dien-thoai',
+    btnCls: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60',
+    activeCls: 'bg-blue-600 text-white shadow-md shadow-blue-500/30',
     featuredLinks: [
       { label: 'iPhone', href: `${ROUTES.PHONES}?brand=apple` },
       { label: 'Samsung Galaxy S', href: `${ROUTES.PHONES}?brand=samsung` },
@@ -43,6 +45,8 @@ const MEGA_MENU_CONFIG = [
     icon: Tablet,
     brands: TABLET_BRANDS,
     category: 'may-tinh-bang',
+    btnCls: 'bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/60',
+    activeCls: 'bg-violet-600 text-white shadow-md shadow-violet-500/30',
     featuredLinks: [
       { label: 'iPad Pro', href: `${ROUTES.TABLETS}?brand=apple` },
       { label: 'Galaxy Tab S', href: `${ROUTES.TABLETS}?brand=samsung` },
@@ -62,6 +66,8 @@ const MEGA_MENU_CONFIG = [
       { id: 'oppo',    name: 'OPPO' },
     ],
     category: 'phu-kien',
+    btnCls: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60',
+    activeCls: 'bg-amber-500 text-white shadow-md shadow-amber-500/30',
     featuredLinks: [
       { label: 'Củ sạc Apple', href: '/phu-kien?brand=apple' },
       { label: 'Củ sạc Samsung', href: '/phu-kien?brand=samsung' },
@@ -189,8 +195,8 @@ export default function Header() {
                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
                                 transition-all duration-200 ${
                       isActive(item.route)
-                        ? 'text-primary bg-primary-50 dark:bg-primary-950'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-dark-800'
+                        ? item.activeCls
+                        : item.btnCls
                     }`}
                   >
                     <item.icon size={16} />
