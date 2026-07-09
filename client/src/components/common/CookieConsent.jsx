@@ -52,14 +52,36 @@ export default function CookieConsent() {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
-                    Cho phép lưu phiên đăng nhập?
+                    Danh sách Cookies
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
-                    Chúng tôi sẽ lưu một <strong>refresh token</strong> an toàn vào cookie
-                    để bạn không cần đăng nhập lại trong <strong>7 ngày</strong>.
+                    Việc từ chối một số loại cookie sẽ có thể ảnh hưởng đến hoạt động của một số chức năng trên website.
                   </p>
                 </div>
               </div>
+
+              {/* Cookie list */}
+              <ul className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4 space-y-1.5 leading-relaxed list-none">
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 text-primary">✓</span>
+                  Ghi nhớ cài đặt và tùy chọn cá nhân
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 text-primary">✓</span>
+                  Nâng cao chất lượng dịch vụ và cá nhân hóa trải nghiệm
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 text-primary">✓</span>
+                  Cung cấp thông tin sản phẩm, dịch vụ, khuyến mại và quảng cáo phù hợp với sở thích của bạn
+                </li>
+              </ul>
+
+              <p className="text-[10px] sm:text-[11px] text-gray-400 mb-3">
+                Tìm hiểu thêm tại{' '}
+                <a href="#" className="underline hover:text-primary transition-colors">
+                  Chính sách thu thập và xử lý dữ liệu cá nhân
+                </a>.
+              </p>
 
               {/* Actions */}
               <div className="flex gap-2">
@@ -76,10 +98,6 @@ export default function CookieConsent() {
                   Từ chối
                 </button>
               </div>
-
-              <p className="text-[10px] sm:text-[11px] text-gray-400 mt-2.5 text-center">
-                Từ chối → session kết thúc sau 15 phút không hoạt động.
-              </p>
             </div>
           </div>
         </motion.div>

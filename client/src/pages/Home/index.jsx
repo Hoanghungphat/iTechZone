@@ -9,12 +9,11 @@ import { ArrowRight, Smartphone, Tablet, Zap, Shield, Truck, Star, ChevronRight 
 
 import ProductSlider from '@/components/product/ProductSlider'
 import ProductCard from '@/components/product/ProductCard'
-import CountdownTimer from '@/components/ui/CountdownTimer'
+
 import { SkeletonGrid } from '@/components/ui/SkeletonCard'
 
 import {
   getFeaturedProducts,
-  getFlashSaleProducts,
   getBestsellerProducts,
   getNewProducts,
   getAccessoryProducts,
@@ -24,8 +23,7 @@ import { ROUTES } from '@/constants'
 import { getPublicBanners } from '@/services/bannerService'
 
 
-// Flash sale end time (24h từ bây giờ — mock)
-const FLASH_SALE_END = new Date(Date.now() + 8 * 60 * 60 * 1000)
+
 
 // ============================================
 // HERO BANNER
@@ -274,61 +272,6 @@ function FeaturedCategories() {
   )
 }
 
-// ============================================
-// FLASH SALE SECTION
-// ============================================
-function FlashSaleSection() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    getFlashSaleProducts(6).then(data => {
-      setProducts(data)
-      setLoading(false)
-    })
-  }, [])
-
-  return (
-    <section className="py-12 bg-gradient-to-br from-dark-900 via-primary-950 to-dark-900">
-      <div className="container-custom">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-yellow-400 rounded-2xl">
-              <Zap size={18} className="text-dark-900 fill-current" />
-              <span className="text-dark-900 font-black text-base uppercase tracking-wide">Flash Sale</span>
-            </div>
-            <div>
-              <p className="text-white/60 text-xs mb-1">Kết thúc sau:</p>
-              <CountdownTimer targetTime={FLASH_SALE_END} />
-            </div>
-          </div>
-          <Link
-            to="/dien-thoai"
-            className="flex items-center gap-1.5 text-sm text-yellow-400 hover:text-yellow-300 font-semibold transition-colors"
-          >
-            Xem tất cả <ArrowRight size={15} />
-          </Link>
-        </div>
-
-        {/* Products */}
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-dark-800 rounded-2xl animate-pulse" style={{ height: 280 }} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {products.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
 
 // ============================================
 // PRODUCT SECTION (generic)
@@ -418,8 +361,7 @@ export default function Home() {
       {/* Categories */}
       <FeaturedCategories />
 
-      {/* Flash Sale */}
-      <FlashSaleSection />
+
 
       {/* Trust */}
       <TrustBanner />
