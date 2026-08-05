@@ -34,10 +34,15 @@ const useAuthStore = create(
 
       /**
        * Đăng nhập
-       * Sau khi đăng nhập → tải cart từ server → set vào local cart
+       * Sau khi đăng nhập → merge cart local + server → sync lên server
        */
       login: async (email, password) => {
         set({ isLoading: true, error: null })
+
+        // Lưu local cart TRƯỚC khi login (có thể có items của guest)
+        const { default: useCartStore } = await import('./useCartStore')
+        const localItems = useCartStore.getState().items
+
         try {
           const rememberMe = localStorage.getItem('itechzone_cookie_consent') === 'true'
           const { user, token } = await loginService(email, password, rememberMe)
@@ -52,11 +57,18 @@ const useAuthStore = create(
             return { success: true, role: user.role }
           }
 
-          // Khôi phục cart từ server (lazy import tránh circular dep)
-          const { default: useCartStore } = await import('./useCartStore')
+          // Lấy cart từ server
           const serverItems = await fetchCartFromServer()
-          if (serverItems && serverItems.length > 0) {
-            useCartStore.getState().setItems(serverItems)
+
+          // Merge: ưu tiên server, bổ sung thêm items local chưa có trên server
+          const merged = mergeCartItems(localItems, serverItems || [])
+
+          // Cập nhật local cart
+          useCartStore.getState().setItems(merged)
+
+          // Sync merged cart lên server (đảm bảo server luôn có đầy đủ)
+          if (merged.length > 0) {
+            syncCartToServer(merged).catch(() => {})
           }
 
           return { success: true, role: user.role }
@@ -144,3 +156,24 @@ const useAuthStore = create(
 )
 
 export default useAuthStore
+
+/**
+ * Merge local cart + server cart
+ * - Nếu item có cả local lẫn server → lấy qty lớn hơn
+ * - Nếu item chỉ có local → thêm vào
+ * - Nếu item chỉ có server → giữ nguyên
+ */
+function mergeCartItems(localItems = [], serverItems = []) {
+  const merged = [...serverItems]
+  for (const local of localItems) {
+    const idx = merged.findIndex(s => s.id === local.id)
+    if (idx >= 0) {
+      // Đã có trên server — lấy qty lớn hơn
+      merged[idx] = { ...merged[idx], qty: Math.max(merged[idx].qty, local.qty) }
+    } else {
+      // Chỉ có local — thêm vào
+      merged.push(local)
+    }
+  }
+  return merged
+}
