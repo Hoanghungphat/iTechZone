@@ -11,7 +11,7 @@ import Breadcrumb from '@/components/common/Breadcrumb'
 import InputField from '@/components/forms/InputField'
 import useAuthStore from '@/store/useAuthStore'
 import { getMyOrders, cancelOrder } from '@/services/orderService'
-import { changePassword } from '@/services/authService'
+import { changePassword, updateProfile } from '@/services/authService'
 import { formatPrice, formatDate } from '@/utils/format'
 import { ORDER_STATUS } from '@/constants'
 
@@ -26,11 +26,36 @@ const TABS = [
  * Tab hồ sơ cá nhân - hiển thị và chỉnh sửa thông tin người dùng
  */
 function ProfileTab({ user }) {
+  const { setUser } = useAuthStore()
+  const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
+    name:     user?.name     || '',
+    phone:    user?.phone    || '',
+    email:    user?.email    || '',
+    birthday: user?.birthday ? new Date(user.birthday).toISOString().split('T')[0] : '',
+    gender:   user?.gender   || '',
   })
+
+  const handleSave = async () => {
+    setLoading(true)
+    try {
+      const updated = await updateProfile({
+        name:     form.name,
+        phone:    form.phone,
+        birthday: form.birthday || null,
+        gender:   form.gender   || null,
+      })
+      setUser({ ...user, ...updated })
+      toast.success('Cập nhật thông tin thành công!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Cập nhật thất bại')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const inputCls = 'w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition'
+  const labelCls = 'block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5'
 
   return (
     <div>
@@ -51,12 +76,15 @@ function ProfileTab({ user }) {
 
       {/* Form chỉnh sửa thông tin cá nhân */}
       <div className="space-y-4 max-w-md">
+        {/* Họ và tên */}
         <InputField
           label="Họ và tên"
           name="name"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
+
+        {/* Email (disabled) */}
         <InputField
           label="Email"
           name="email"
@@ -65,17 +93,55 @@ function ProfileTab({ user }) {
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           disabled
         />
+
+        {/* Số điện thoại */}
         <InputField
           label="Số điện thoại"
           name="phone"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
         />
+
+        {/* Ngày sinh */}
+        <div>
+          <label className={labelCls}>Ngày sinh</label>
+          <input
+            type="date"
+            value={form.birthday}
+            onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+            max={new Date().toISOString().split('T')[0]}
+            className={inputCls}
+          />
+        </div>
+
+        {/* Giới tính */}
+        <div>
+          <label className={labelCls}>Giới tính</label>
+          <div className="flex items-center gap-6 pt-1">
+            {['Nam', 'Nữ', 'Khác'].map((option) => (
+              <label key={option} className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="gender"
+                  value={option}
+                  checked={form.gender === option}
+                  onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                  className="w-4 h-4 accent-primary cursor-pointer"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">
+                  {option}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <button
-          onClick={() => toast.success('Cập nhật thành công!')}
-          className="px-6 py-3 bg-primary text-white rounded-2xl font-semibold text-sm hover:bg-primary-700 transition-colors shadow-primary"
+          onClick={handleSave}
+          disabled={loading}
+          className="px-6 py-3 bg-primary text-white rounded-2xl font-semibold text-sm hover:bg-primary-700 disabled:opacity-60 transition-colors shadow-primary"
         >
-          Lưu thay đổi
+          {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
         </button>
       </div>
     </div>
@@ -159,7 +225,7 @@ function OrdersTab() {
               </span>
             </div>
 
-            {/* Danh sách sản phẩm — dùng field thật từ backend */}
+            {/* Danh sách sản phẩm */}
             {order.items?.map((item) => (
               <div key={item.id} className="flex items-center gap-3 mb-2">
                 <img
@@ -270,45 +336,6 @@ function PasswordTab() {
           {loading ? 'Đang lưu...' : 'Cập nhật mật khẩu'}
         </button>
       </form>
-    </div>
-  )
-}
-
-function AddressTab({ user }) {
-  return (
-    <div className="space-y-4">
-      {/* Danh sách địa chỉ đã lưu */}
-      {(user?.addresses || []).map((addr) => (
-        <div
-          key={addr.id}
-          className="bg-white dark:bg-dark-800 rounded-2xl p-5 border border-gray-100 dark:border-dark-700"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-bold text-gray-900 dark:text-white">{addr.name}</p>
-                {addr.isDefault && (
-                  <span className="px-2 py-0.5 bg-primary text-white text-xs font-bold rounded-lg">
-                    Mặc định
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500">{addr.phone}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {addr.address}, {addr.ward}, {addr.district}, {addr.city}
-              </p>
-            </div>
-            <button className="text-primary hover:text-primary-700 transition-colors">
-              <Edit3 size={16} />
-            </button>
-          </div>
-        </div>
-      ))}
-
-      {/* Nút thêm địa chỉ mới */}
-      <button className="w-full py-3.5 border-2 border-dashed border-gray-300 dark:border-dark-600 rounded-2xl text-sm font-semibold text-gray-500 hover:border-primary hover:text-primary transition-colors">
-        + Thêm địa chỉ mới
-      </button>
     </div>
   )
 }

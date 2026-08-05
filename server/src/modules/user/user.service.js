@@ -20,11 +20,13 @@ export async function getProfile(userId) {
   return safeUser(user)
 }
 
-export async function updateProfile(userId, { name, phone, avatar }) {
+export async function updateProfile(userId, { name, phone, avatar, birthday, gender }) {
   const data = {}
-  if (name   !== undefined) data.name   = name
-  if (phone  !== undefined) data.phone  = phone
-  if (avatar !== undefined) data.avatar = avatar
+  if (name     !== undefined) data.name     = name
+  if (phone    !== undefined) data.phone    = phone
+  if (avatar   !== undefined) data.avatar   = avatar
+  if (birthday !== undefined) data.birthday = birthday ? new Date(birthday) : null
+  if (gender   !== undefined) data.gender   = gender
 
   const user = await updateUserById(userId, data)
   return safeUser(user)

@@ -13,8 +13,8 @@ export async function getProfileController(req, res, next) {
 
 export async function updateProfileController(req, res, next) {
   try {
-    const { name, phone, avatar } = req.body
-    const user = await updateProfile(req.user.id, { name, phone, avatar })
+    const { name, phone, avatar, birthday, gender } = req.body
+    const user = await updateProfile(req.user.id, { name, phone, avatar, birthday, gender })
     return successResponse(res, user, 'Cập nhật thông tin thành công')
   } catch (err) { next(err) }
 }
