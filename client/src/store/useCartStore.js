@@ -1,11 +1,38 @@
 /**
  * store/useCartStore.js
  * Zustand store quản lý giỏ hàng
- * Tự động persist vào localStorage
+ * Tự động persist vào localStorage + sync server real-time khi đã đăng nhập
  */
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { STORAGE_KEYS } from '@/constants'
+
+// ────────────────────────────────────────────────────
+// Helper: sync cart lên server (chỉ khi đã đăng nhập)
+// Dùng dynamic import để tránh circular dependency
+// Debounce 400ms để gộp nhiều thao tác liên tiếp
+// ────────────────────────────────────────────────────
+let syncTimer = null
+
+function scheduleServerSync(getItems) {
+  const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+  if (!token) return // Guest → không cần sync server
+
+  clearTimeout(syncTimer)
+  syncTimer = setTimeout(async () => {
+    try {
+      const { syncCartToServer, clearServerCart } = await import('@/services/cartSyncService')
+      const items = getItems()
+      if (items.length > 0) {
+        await syncCartToServer(items)
+      } else {
+        await clearServerCart()
+      }
+    } catch {
+      // sync lỗi → bỏ qua, không ảnh hưởng UX
+    }
+  }, 400)
+}
 
 const useCartStore = create(
   persist(
@@ -55,7 +82,6 @@ const useCartStore = create(
           const existing = state.items.find(i => i.id === product.id)
 
           if (existing) {
-            // Tăng số lượng nếu đã có
             return {
               items: state.items.map(i =>
                 i.id === product.id
@@ -65,7 +91,6 @@ const useCartStore = create(
             }
           }
 
-          // Thêm mới
           return {
             items: [...state.items, {
               id: product.id,
@@ -79,19 +104,21 @@ const useCartStore = create(
             }],
           }
         })
+        scheduleServerSync(() => get().items)
       },
 
       /**
-       * Xóa sản phẩm khỏi giỏ
+       * Xóa sản phẩm khỏi giỏ — sync server ngay
        */
       removeItem: (productId) => {
         set((state) => ({
           items: state.items.filter(i => i.id !== productId),
         }))
+        scheduleServerSync(() => get().items)
       },
 
       /**
-       * Cập nhật số lượng
+       * Cập nhật số lượng — sync server ngay
        */
       updateQty: (productId, qty) => {
         if (qty <= 0) {
@@ -105,15 +132,20 @@ const useCartStore = create(
               : i
           ),
         }))
+        scheduleServerSync(() => get().items)
       },
 
       /**
-       * Xóa toàn bộ giỏ hàng
+       * Xóa toàn bộ giỏ hàng — sync server ngay
        */
-      clearCart: () => set({ items: [] }),
+      clearCart: () => {
+        set({ items: [] })
+        scheduleServerSync(() => [])
+      },
 
       /**
        * Set toàn bộ items (dùng khi khôi phục cart từ server sau login)
+       * KHÔNG sync server để tránh vòng lặp
        */
       setItems: (items) => set({ items }),
 
