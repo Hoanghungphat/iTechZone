@@ -23,17 +23,15 @@ export default function ProductCard({ product, index = 0 }) {
 
   const discount = product.discount || calcDiscount(product.originalPrice, product.price)
 
-  // Thêm vào giỏ hàng — yêu cầu đăng nhập
+  // Thêm vào giỏ hàng — guest cũng thêm được, chỉ chặn khi thanh toán
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    const added = addToCart(product, 1)
-    if (added) {
-      toast.success(`Đã thêm ${product.name} vào giỏ hàng!`, {
-        icon: '🛒',
-        duration: 2000,
-      })
-    }
+    addToCart(product, 1)
+    toast.success(`Đã thêm ${product.name} vào giỏ hàng!`, {
+      icon: '🛒',
+      duration: 2000,
+    })
   }
 
   // Wishlist (mock)
