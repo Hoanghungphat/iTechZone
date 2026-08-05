@@ -48,7 +48,7 @@ function ProfileTab({ user }) {
       setUser({ ...user, ...updated })
       toast.success('Cập nhật thông tin thành công!')
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Cập nhật thất bại')
+      toast.error(err.message || 'Cập nhật thất bại')
     } finally {
       setLoading(false)
     }
