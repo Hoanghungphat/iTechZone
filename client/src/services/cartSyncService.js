@@ -5,13 +5,16 @@
 import api from './api'
 
 /**
- * Lưu toàn bộ local cart lên backend (batch upsert)
- * Gọi khi: thêm/xoá sản phẩm khi đã đăng nhập
+ * Lưu toàn bộ local cart lên backend (clear → re-add)
+ * Xoá cart cũ trước để tránh cộng dồn số lượng (POST /cart cộng thêm qty)
  */
 export async function syncCartToServer(localItems) {
   if (!localItems || localItems.length === 0) return
 
-  // Gửi từng item lên backend (upsert)
+  // Xoá cart cũ trên server trước
+  await clearServerCart()
+
+  // Thêm lại từng item với số lượng chính xác
   const requests = localItems.map(item =>
     api.post('/cart', {
       productId: item.id,
