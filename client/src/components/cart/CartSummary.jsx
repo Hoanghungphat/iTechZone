@@ -1,16 +1,35 @@
 /**
  * CartSummary.jsx — Tóm tắt đơn hàng
+ * Nút "Thanh toán ngay" sẽ yêu cầu đăng nhập nếu chưa có tài khoản
  */
-import { Link } from 'react-router-dom'
-import { ArrowRight, Tag } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Lock } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import { formatPrice } from '@/utils/format'
+import useAuthStore from '@/store/useAuthStore'
 
 export default function CartSummary({ items = [], showCheckoutBtn = true }) {
+  const { token } = useAuthStore()
+  const navigate = useNavigate()
+
   // Tính tạm tính, phí ship và tổng cộng
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0)
   // Miễn phí ship cho đơn trên 5 triệu
   const shipping = subtotal > 5_000_000 ? 0 : 30_000
   const total = subtotal + shipping
+
+  const handleCheckout = () => {
+    if (!token) {
+      toast.error('Vui lòng đăng nhập để tiến hành thanh toán', {
+        icon: '🔒',
+        duration: 3000,
+      })
+      // Lưu trang hiện tại để redirect về sau khi đăng nhập
+      navigate('/dang-nhap', { state: { from: '/thanh-toan' } })
+      return
+    }
+    navigate('/thanh-toan')
+  }
 
   return (
     <div className="bg-white dark:bg-dark-800 rounded-2xl p-5
@@ -45,18 +64,19 @@ export default function CartSummary({ items = [], showCheckoutBtn = true }) {
         </div>
       </div>
 
-      {/* Nút thanh toán */}
+      {/* Nút thanh toán — check auth tại đây */}
       {showCheckoutBtn && (
-        <Link
-          to="/thanh-toan"
+        <button
+          onClick={handleCheckout}
           className="flex items-center justify-center gap-2 w-full
                      py-3.5 bg-primary text-white rounded-2xl
                      font-semibold hover:bg-primary-700
                      transition-colors shadow-primary text-sm"
         >
+          {!token && <Lock size={15} />}
           Thanh toán ngay
           <ArrowRight size={16} />
-        </Link>
+        </button>
       )}
     </div>
   )

@@ -19,6 +19,7 @@ import ProductSlider from '@/components/product/ProductSlider'
 import ErrorState from '@/components/ui/ErrorState'
 import Spinner from '@/components/common/Spinner'
 import { useAddToCart } from '@/hooks/useAddToCart'
+import { toast } from 'react-hot-toast'
 import useAuthStore from '@/store/useAuthStore'
 import useAdminStore from '@/store/useAdminStore'
 import { getProductBySlug, getRelatedProducts } from '@/services/productService'
@@ -179,7 +180,7 @@ function StarPicker({ value, onChange }) {
 // REVIEW SECTION (real API)
 // ============================================
 function ReviewSection({ productId, rating: initialRating, reviewCount: initialCount }) {
-  const { user } = useAuthStore()
+  const { user, token } = useAuthStore()
   const { admin } = useAdminStore()
   const [reviews, setReviews]       = useState([])
   const [loading, setLoading]       = useState(true)
@@ -421,6 +422,7 @@ export default function ProductDetail() {
   const [isWishlisted, setIsWishlisted] = useState(false)
 
   const { addToCart } = useAddToCart()
+  const { token } = useAuthStore()
 
   useEffect(() => {
     setLoading(true)
@@ -490,15 +492,20 @@ export default function ProductDetail() {
     if (added) toast.success('Đã thêm vào giỏ hàng!', { icon: '🛒' })
   }
 
-  // Mua ngay — yêu cầu đăng nhập
+  // Mua ngay — thêm vào giỏ tự do, nhưng yêu cầu đăng nhập khi sang trang thanh toán
   const handleBuyNow = () => {
     const itemToAdd = activeVariant
       ? { ...product, price: activeVariant.price, originalPrice: activeVariant.originalPrice,
           selectedColor, selectedCapacity,
           name: `${product.name} - ${selectedColor} ${selectedCapacity}` }
       : product
-    const added = addToCart(itemToAdd, qty, false) // false = không mở drawer
-    if (added) navigate('/thanh-toan')
+    addToCart(itemToAdd, qty, false) // false = không mở drawer
+    if (!token) {
+      toast.error('Vui lòng đăng nhập để tiến hành thanh toán', { icon: '🔒', duration: 3000 })
+      navigate('/dang-nhap', { state: { from: '/thanh-toan' } })
+      return
+    }
+    navigate('/thanh-toan')
   }
 
   if (loading) {
