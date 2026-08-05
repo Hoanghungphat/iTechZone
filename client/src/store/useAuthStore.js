@@ -15,7 +15,7 @@ import {
   logout as logoutService,
   register as registerService,
 } from '@/services/authService'
-import { fetchCartFromServer, syncCartToServer } from '@/services/cartSyncService'
+import { fetchCartFromServer, syncCartToServer, clearServerCart } from '@/services/cartSyncService'
 
 const useAuthStore = create(
   persist(
@@ -106,18 +106,20 @@ const useAuthStore = create(
 
       /**
        * Đăng xuất
-       * Local cart bị xoá → khi đăng nhập lại sẽ lấy cart từ server
-       * Cart trên server vẫn được giữ nguyên
+       * Luôn sync server cart = local cart (kể cả khi rỗng → clear server)
+       * Đảm bảo item đã xóa không quay lại sau khi login
        */
       logout: async () => {
-        // Sync cart lên server trước khi xoá local (đảm bảo không mất dữ liệu)
         try {
           const { default: useCartStore } = await import('./useCartStore')
           const localItems = useCartStore.getState().items
           if (localItems.length > 0) {
+            // Có item → sync lên server (clear rồi add lại)
             await syncCartToServer(localItems)
+          } else {
+            // Giỏ rỗng → xóa sạch server cart để tránh item "ma" quay lại
+            await clearServerCart()
           }
-          // Xoá local cart
           useCartStore.getState().clearCart()
         } catch {
           // Bỏ qua lỗi sync — vẫn đăng xuất bình thường
