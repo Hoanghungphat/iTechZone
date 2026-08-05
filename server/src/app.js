@@ -27,6 +27,8 @@ app.use(cors({
     if (!origin) return callback(null, true)
     const allowedOrigins = [
       process.env.CLIENT_URL,
+      'https://itechzone.store',
+      'https://www.itechzone.store',
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3000',
