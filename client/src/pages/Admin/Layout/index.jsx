@@ -23,7 +23,6 @@ const NAV_ADMIN = [
 ]
 
 const NAV_STAFF = [
-  { to: '/admin/dashboard',       icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/products',        icon: Package,          label: 'Sản phẩm' },
   { to: '/admin/banners',         icon: Image,            label: 'Banner' },
   { to: '/admin/orders',          icon: ShoppingBag,      label: 'Đơn hàng' },

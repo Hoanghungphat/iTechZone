@@ -41,18 +41,113 @@ export async function seedDefaultBanners() {
 // DASHBOARD
 // ================================
 export async function getDashboardStats() {
-  const [totalProducts, totalUsers, totalOrders, totalRevenue, pendingRequests, recentOrders] = await Promise.all([
+  const now = new Date()
+
+  // Khung thời gian
+  const startOfThisWeek = new Date(now); startOfThisWeek.setDate(now.getDate() - 6); startOfThisWeek.setHours(0,0,0,0)
+  const startOfLastWeek = new Date(startOfThisWeek); startOfLastWeek.setDate(startOfThisWeek.getDate() - 7)
+  const endOfLastWeek   = new Date(startOfThisWeek)
+
+  const [
+    totalProducts,
+    totalUsers,
+    totalOrders,
+    totalRevenue,
+    pendingRequests,
+    recentOrders,
+    // So sánh tuần trước
+    lastWeekOrders,
+    lastWeekRevenue,
+    lastWeekUsers,
+    // Doanh thu 7 ngày gần nhất (theo ngày)
+    dailyOrders,
+    // Top sản phẩm bán chạy
+    topOrderItems,
+    // Sản phẩm theo danh mục
+    productsByCategory,
+  ] = await Promise.all([
     prisma.product.count(),
     prisma.user.count({ where: { role: 'user' } }),
-    prisma.order.count(),
+    prisma.order.count({ where: { status: { not: 'cancelled' } } }),
     prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: 'cancelled' } } }),
     prisma.approvalRequest.count({ where: { status: 'pending' } }),
-    prisma.order.findMany({ take: 5, orderBy: { createdAt: 'desc' }, include: { user: { select: { name: true, email: true } } } }),
+    prisma.order.findMany({
+      take: 5, orderBy: { createdAt: 'desc' },
+      include: { user: { select: { name: true, email: true } } }
+    }),
+    // tuần trước: đơn hàng
+    prisma.order.count({ where: { status: { not: 'cancelled' }, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
+    // tuần trước: doanh thu
+    prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: 'cancelled' }, createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
+    // tuần trước: user mới
+    prisma.user.count({ where: { role: 'user', createdAt: { gte: startOfLastWeek, lt: endOfLastWeek } } }),
+    // Đơn hàng 7 ngày (để tính doanh thu theo ngày)
+    prisma.order.findMany({
+      where: { status: { not: 'cancelled' }, createdAt: { gte: startOfThisWeek } },
+      select: { createdAt: true, totalAmount: true },
+    }),
+    // Top sản phẩm (group by product name)
+    prisma.orderItem.groupBy({
+      by: ['productName'],
+      _sum: { quantity: true, price: true },
+      orderBy: { _sum: { quantity: 'desc' } },
+      take: 5,
+    }),
+    // Sản phẩm theo danh mục
+    prisma.product.groupBy({
+      by: ['category'],
+      _count: { id: true },
+    }),
   ])
+
+  // Build revenue chart (last 7 days)
+  const revenueChart = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(now.getDate() - i)
+    const label = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`
+    const dayStart = new Date(d); dayStart.setHours(0,0,0,0)
+    const dayEnd   = new Date(d); dayEnd.setHours(23,59,59,999)
+    const revenue  = dailyOrders
+      .filter(o => o.createdAt >= dayStart && o.createdAt <= dayEnd)
+      .reduce((s, o) => s + (o.totalAmount || 0), 0)
+    revenueChart.push({ date: label, revenue })
+  }
+
+  // Category breakdown
+  const catTotal = productsByCategory.reduce((s, c) => s + c._count.id, 0)
+  const CATEGORY_LABELS = { phone: 'Điện thoại', tablet: 'Máy tính bảng', accessory: 'Phụ kiện', earphone: 'Tai nghe' }
+  const categoryBreakdown = productsByCategory.map(c => ({
+    name: CATEGORY_LABELS[c.category] || c.category,
+    value: Math.round((c._count.id / catTotal) * 100),
+  })).sort((a, b) => b.value - a.value)
+
+  // % change helpers
+  const pct = (curr, prev) => prev === 0 ? (curr > 0 ? 100 : 0) : Math.round(((curr - prev) / prev) * 100)
+
+  const thisWeekOrders  = dailyOrders.length
+  const thisWeekRevenue = dailyOrders.reduce((s, o) => s + (o.totalAmount || 0), 0)
+  const thisWeekUsers   = await prisma.user.count({ where: { role: 'user', createdAt: { gte: startOfThisWeek } } })
+
   return {
-    totalProducts, totalUsers, totalOrders,
+    totalProducts,
+    totalUsers,
+    totalOrders,
     totalRevenue: totalRevenue._sum.totalAmount || 0,
-    pendingRequests, recentOrders,
+    pendingRequests,
+    recentOrders,
+    revenueChart,
+    topProducts: topOrderItems.map(item => ({
+      name: item.productName,
+      sold: item._sum.quantity || 0,
+      revenue: (item._sum.price || 0) * (item._sum.quantity || 0),
+    })),
+    categoryBreakdown,
+    changes: {
+      orders:  pct(thisWeekOrders,  lastWeekOrders),
+      revenue: pct(thisWeekRevenue, lastWeekRevenue._sum.totalAmount || 0),
+      users:   pct(thisWeekUsers,   lastWeekUsers),
+    },
   }
 }
 
