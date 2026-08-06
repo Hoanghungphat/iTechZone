@@ -75,6 +75,11 @@ app.get('/', (req, res) => {
   })
 })
 
+// Health check — dùng cho UptimeRobot ping giữ Render không ngủ
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
 app.use('/api/auth',                        authRoutes)
 app.use('/api/users',                       userRoutes)
 app.use('/api/products',                    productRoutes)
