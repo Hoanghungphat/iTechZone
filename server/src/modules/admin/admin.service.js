@@ -90,6 +90,7 @@ export async function getDashboardStats() {
     prisma.orderItem.groupBy({
       by: ['productName'],
       _sum: { quantity: true, price: true },
+      _count: { id: true },
       orderBy: { _sum: { quantity: 'desc' } },
       take: 5,
     }),
@@ -137,11 +138,16 @@ export async function getDashboardStats() {
     pendingRequests,
     recentOrders,
     revenueChart,
-    topProducts: topOrderItems.map(item => ({
-      name: item.productName,
-      sold: item._sum.quantity || 0,
-      revenue: item._sum.price || 0,   // _sum.price đã = tổng (unitPrice × qty) per item
-    })),
+    topProducts: topOrderItems.map(item => {
+      // unit_price = tổng price / số rows (vì price trong mỗi row là unit price)
+      const unitPrice = item._count.id > 0 ? (item._sum.price || 0) / item._count.id : 0
+      const totalQty  = item._sum.quantity || 0
+      return {
+        name:    item.productName,
+        sold:    totalQty,
+        revenue: Math.round(unitPrice * totalQty),
+      }
+    }),
     categoryBreakdown,
     changes: {
       orders:  pct(thisWeekOrders,  lastWeekOrders),
