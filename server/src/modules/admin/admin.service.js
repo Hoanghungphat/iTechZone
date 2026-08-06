@@ -140,7 +140,7 @@ export async function getDashboardStats() {
     topProducts: topOrderItems.map(item => ({
       name: item.productName,
       sold: item._sum.quantity || 0,
-      revenue: (item._sum.price || 0) * (item._sum.quantity || 0),
+      revenue: item._sum.price || 0,   // _sum.price đã = tổng (unitPrice × qty) per item
     })),
     categoryBreakdown,
     changes: {
