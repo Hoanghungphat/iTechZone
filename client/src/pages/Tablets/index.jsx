@@ -55,6 +55,16 @@ export default function Tablets() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
+  // Sync URL param → filters khi user click brand trên navbar
+  useEffect(() => {
+    const brand = searchParams.get('brand')
+    setFilters(prev => ({
+      ...prev,
+      brands: brand ? [brand] : [],
+    }))
+    setPage(1)
+  }, [searchParams])
+
   const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }))
     setPage(1)
