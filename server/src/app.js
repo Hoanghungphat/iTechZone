@@ -15,6 +15,7 @@ import adminRoutes                from './modules/admin/admin.routes.js'
 import { productReviewRouter, reviewRouter } from './modules/review/review.routes.js'
 import { bannerPublicRouter, bannerAdminRouter } from './modules/banner/banner.routes.js'
 import { errorHandler, notFound } from './core/middlewares/error.middleware.js'
+import { generalLimiter, authLimiter, publicLimiter, orderLimiter } from './core/middlewares/rateLimit.middleware.js'
 import { seedSystemAccounts, seedDefaultBanners } from './modules/admin/admin.service.js'
 
 const app = express()
@@ -22,6 +23,9 @@ const app = express()
 // ================================
 // MIDDLEWARES
 // ================================
+// Rate limiting — chống DDoS (áp dụng toàn bộ API)
+app.use('/api', generalLimiter)
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true)
@@ -80,14 +84,14 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-app.use('/api/auth',                        authRoutes)
+app.use('/api/auth',                        authLimiter, authRoutes)
 app.use('/api/users',                       userRoutes)
-app.use('/api/products',                    productRoutes)
-app.use('/api/products/:productId/reviews', productReviewRouter)
-app.use('/api/cart',                        cartRoutes)
-app.use('/api/orders',                      orderRoutes)
+app.use('/api/products',                    publicLimiter, productRoutes)
+app.use('/api/products/:productId/reviews', publicLimiter, productReviewRouter)
+app.use('/api/cart',                        orderLimiter, cartRoutes)
+app.use('/api/orders',                      orderLimiter, orderRoutes)
 app.use('/api/reviews',                     reviewRouter)
-app.use('/api/banners',                     bannerPublicRouter)
+app.use('/api/banners',                     publicLimiter, bannerPublicRouter)
 app.use('/api/admin',                       adminRoutes)
 app.use('/api/admin/banners',               bannerAdminRouter)
 
