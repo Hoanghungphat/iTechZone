@@ -120,11 +120,12 @@ const useAuthStore = create(
             // Giỏ rỗng → xóa sạch server cart để tránh item "ma" quay lại
             await clearServerCart()
           }
-          useCartStore.getState().clearCart()
+          // Dùng clearLocalCart — không trigger scheduleServerSync (server đã được xử lý phía trên)
+          useCartStore.getState().clearLocalCart()
         } catch {
           // Bỏ qua lỗi sync — vẫn đăng xuất bình thường
           const { default: useCartStore } = await import('./useCartStore')
-          useCartStore.getState().clearCart()
+          useCartStore.getState().clearLocalCart()
         }
 
         logoutService()

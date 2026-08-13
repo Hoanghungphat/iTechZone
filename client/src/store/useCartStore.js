@@ -136,11 +136,19 @@ const useCartStore = create(
       },
 
       /**
-       * Xóa toàn bộ giỏ hàng — sync server ngay
+       * Xóa toàn bộ giỏ hàng + sync server
        */
       clearCart: () => {
         set({ items: [] })
         scheduleServerSync(() => [])
+      },
+
+      /**
+       * Xóa local cart MÀ KHÔNG sync server
+       * Dùng khi logout (đã sync server trước rồi)
+       */
+      clearLocalCart: () => {
+        set({ items: [] })
       },
 
       /**
@@ -158,8 +166,20 @@ const useCartStore = create(
     }),
     {
       name: STORAGE_KEYS.CART,
-      // Chỉ persist items, không persist isDrawerOpen
       partialize: (state) => ({ items: state.items }),
+      // Sau khi page refresh, nếu user đã đăng nhập và có items local
+      // → re-sync lên server để đảm bảo server luôn có đúng cart
+      onRehydrateStorage: () => (state) => {
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+        if (token && state?.items?.length > 0) {
+          setTimeout(async () => {
+            try {
+              const { syncCartToServer } = await import('@/services/cartSyncService')
+              await syncCartToServer(state.items)
+            } catch { /* bỏ qua nếu lỗi */ }
+          }, 1500) // đợi app khởi động xong
+        }
+      },
     }
   )
 )
