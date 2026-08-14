@@ -695,39 +695,45 @@ export default function ProductDetail() {
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Số lượng:</p>
               <div className="flex items-center border border-gray-200 dark:border-dark-600 rounded-xl overflow-hidden">
                 <button onClick={() => setQty(q => Math.max(1, q - 1))}
-                        className="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors font-bold">
+                        disabled={displayStock === 0}
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors font-bold disabled:opacity-40">
                   −
                 </button>
                 <span className="w-12 text-center font-bold text-gray-900 dark:text-white">{qty}</span>
                 <button onClick={() => setQty(q => Math.min(displayStock, q + 1))}
-                        className="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors font-bold">
+                        disabled={displayStock === 0}
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors font-bold disabled:opacity-40">
                   +
                 </button>
               </div>
-              <span className="text-xs text-gray-400">Còn {displayStock} sản phẩm</span>
+              {displayStock === 0 ? (
+                <span className="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-950/30 px-3 py-1 rounded-full">Hết hàng</span>
+              ) : (
+                <span className="text-xs text-gray-400">Còn {displayStock} sản phẩm</span>
+              )}
             </div>
 
             {/* CTA Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={displayStock === 0}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm
                            border-2 border-primary text-primary hover:bg-primary hover:text-white
                            disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <ShoppingCart size={18} />
-                Thêm giỏ hàng
+                {displayStock === 0 ? 'Hết hàng' : 'Thêm giỏ hàng'}
               </button>
               <button
                 onClick={handleBuyNow}
-                disabled={product.stock === 0}
+                disabled={displayStock === 0}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm
                            bg-primary text-white hover:bg-primary-700 shadow-primary
                            disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <Zap size={18} fill="currentColor" />
-                Mua ngay
+                {displayStock === 0 ? 'Hết hàng' : 'Mua ngay'}
               </button>
               <button
                 onClick={() => setIsWishlisted(!isWishlisted)}
