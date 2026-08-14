@@ -43,3 +43,11 @@ export async function submitPaymentProof(orderId, proofImage) {
   const res = await api.put(`/orders/${orderId}/payment-proof`, { proofImage })
   return res.data
 }
+
+/**
+ * Khách xác nhận đã nhận hàng
+ */
+export async function confirmReceipt(orderId) {
+  const res = await api.put(`/orders/${orderId}/confirm-receipt`)
+  return res.data
+}

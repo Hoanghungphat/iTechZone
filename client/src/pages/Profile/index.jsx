@@ -10,7 +10,7 @@ import { toast } from 'react-hot-toast'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import InputField from '@/components/forms/InputField'
 import useAuthStore from '@/store/useAuthStore'
-import { getMyOrders, cancelOrder } from '@/services/orderService'
+import { getMyOrders, cancelOrder, confirmReceipt } from '@/services/orderService'
 import { changePassword, updateProfile } from '@/services/authService'
 import { formatPrice, formatDate } from '@/utils/format'
 import { ORDER_STATUS } from '@/constants'
@@ -155,6 +155,7 @@ function OrdersTab() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState(null)
+  const [confirming, setConfirming] = useState(null)
 
   const loadOrders = () => {
     setLoading(true)
@@ -176,6 +177,20 @@ function OrdersTab() {
       toast.error(err.message || 'Không thể huỷ đơn hàng')
     } finally {
       setCancelling(null)
+    }
+  }
+
+  const handleConfirmReceipt = async (orderId) => {
+    if (!window.confirm('Xác nhận bạn đã nhận được hàng?')) return
+    setConfirming(orderId)
+    try {
+      await confirmReceipt(orderId)
+      toast.success('✅ Xác nhận nhận hàng thành công!')
+      loadOrders()
+    } catch (err) {
+      toast.error(err.message || 'Không thể xác nhận')
+    } finally {
+      setConfirming(null)
     }
   }
 
@@ -243,21 +258,39 @@ function OrdersTab() {
               </div>
             ))}
 
-            {/* Tổng tiền + nút huỷ */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-dark-600">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500">Tổng cộng:</span>
-                {order.status === 'pending' && (
-                  <button
-                    onClick={() => handleCancel(order.id)}
-                    disabled={cancelling === order.id}
-                    className="text-xs text-red-500 hover:text-red-700 font-medium disabled:opacity-50"
-                  >
-                    {cancelling === order.id ? 'Đang huỷ...' : 'Huỷ đơn'}
-                  </button>
-                )}
+            {/* Tổng tiền + nút hành động */}
+            <div className="pt-3 border-t border-gray-100 dark:border-dark-600 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-500">Tổng cộng:</span>
+                  {order.status === 'pending' && (
+                    <button
+                      onClick={() => handleCancel(order.id)}
+                      disabled={cancelling === order.id}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium disabled:opacity-50"
+                    >
+                      {cancelling === order.id ? 'Đang huỷ...' : 'Huỷ đơn'}
+                    </button>
+                  )}
+                </div>
+                <span className="font-black text-primary">{formatPrice(order.totalAmount)}</span>
               </div>
-              <span className="font-black text-primary">{formatPrice(order.totalAmount)}</span>
+
+              {/* Nút xác nhận nhận hàng */}
+              {order.status === 'shipping' && !order.customerConfirmed && (
+                <button
+                  onClick={() => handleConfirmReceipt(order.id)}
+                  disabled={confirming === order.id}
+                  className="w-full py-2.5 bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                >
+                  ✅ {confirming === order.id ? 'Đang xác nhận...' : 'Xác nhận đã nhận hàng'}
+                </button>
+              )}
+              {order.status === 'shipping' && order.customerConfirmed && (
+                <div className="w-full py-2.5 bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 rounded-xl font-semibold text-sm text-center border border-green-200 dark:border-green-800">
+                  ✓ Bạn đã xác nhận nhận hàng — đang chờ admin hoàn tất
+                </div>
+              )}
             </div>
           </div>
         )

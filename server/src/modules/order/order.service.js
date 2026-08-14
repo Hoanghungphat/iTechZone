@@ -116,3 +116,23 @@ export async function submitPaymentProof(orderId, userId, proofImage) {
     },
   })
 }
+
+export async function confirmReceipt(orderId, userId) {
+  const order = await prisma.order.findFirst({ where: { id: orderId, userId } })
+  if (!order) {
+    const err = new Error('Không tìm thấy đơn hàng')
+    err.statusCode = 404; throw err
+  }
+  if (order.status !== 'shipping') {
+    const err = new Error('Đơn hàng chưa ở trạng thái đang giao')
+    err.statusCode = 400; throw err
+  }
+  if (order.customerConfirmed) {
+    const err = new Error('Bạn đã xác nhận nhận hàng rồi')
+    err.statusCode = 400; throw err
+  }
+  return prisma.order.update({
+    where: { id: orderId },
+    data:  { customerConfirmed: true },
+  })
+}

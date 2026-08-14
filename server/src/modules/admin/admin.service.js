@@ -244,6 +244,16 @@ export async function getAllOrders({ page = 1, limit = 20, status, search }) {
 }
 
 export async function updateOrderStatus(id, status, version, actor) {
+  // Nếu chuyển sang completed → phải khách đã xác nhận nhận hàng
+  if (status === 'completed') {
+    const order = await prisma.order.findUnique({ where: { id } })
+    if (!order) { const e = new Error('Không tìm thấy đơn hàng'); e.statusCode = 404; throw e }
+    if (!order.customerConfirmed) {
+      const e = new Error('Khách hàng chưa xác nhận đã nhận hàng')
+      e.statusCode = 400; throw e
+    }
+  }
+
   // Optimistic locking: chỉ update nếu version khớp
   if (version !== undefined) {
     const result = await prisma.order.updateMany({

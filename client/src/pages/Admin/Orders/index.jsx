@@ -12,7 +12,7 @@ const STATUSES = [
   { value: 'pending',   label: 'Chờ xác nhận', cls: 'bg-yellow-500/20 text-yellow-400' },
   { value: 'confirmed', label: 'Đã xác nhận',  cls: 'bg-blue-500/20 text-blue-400' },
   { value: 'shipping',  label: 'Đang giao',     cls: 'bg-indigo-500/20 text-indigo-400' },
-  { value: 'delivered', label: 'Đã giao',       cls: 'bg-green-500/20 text-green-400' },
+  { value: 'completed', label: 'Đã giao',       cls: 'bg-green-500/20 text-green-400' },
   { value: 'cancelled', label: 'Đã hủy',        cls: 'bg-red-500/20 text-red-400' },
 ]
 const STATUS_MAP = Object.fromEntries(STATUSES.filter(s => s.value).map(s => [s.value, s]))
@@ -20,8 +20,8 @@ const STATUS_MAP = Object.fromEntries(STATUSES.filter(s => s.value).map(s => [s.
 const NEXT_STATUS = {
   pending:   ['confirmed', 'cancelled'],
   confirmed: ['shipping',  'cancelled'],
-  shipping:  ['delivered'],
-  delivered: [],
+  shipping:  ['completed'],
+  completed: [],
   cancelled: [],
 }
 
@@ -137,14 +137,39 @@ export default function AdminOrders() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
+                        {/* Badge khách xác nhận */}
+                        {o.status === 'shipping' && (
+                          <div className="mb-1">
+                            {o.customerConfirmed ? (
+                              <span className="text-xs px-2 py-0.5 rounded-lg bg-green-500/20 text-green-400 font-medium">
+                                ✓ Khách đã nhận hàng
+                              </span>
+                            ) : (
+                              <span className="text-xs px-2 py-0.5 rounded-lg bg-yellow-500/20 text-yellow-400 font-medium">
+                                ⏳ Chờ khách xác nhận
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {nexts.length > 0 && (
-                          <div className="flex gap-1">
-                            {nexts.map(ns => (
-                              <button key={ns} onClick={() => handleStatus(o.id, ns, o.version)}
-                                className={`text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors ${STATUS_MAP[ns]?.cls || 'bg-slate-700 text-slate-300'} hover:opacity-80`}>
-                                → {STATUS_MAP[ns]?.label}
-                              </button>
-                            ))}
+                          <div className="flex gap-1 flex-wrap">
+                            {nexts.map(ns => {
+                              const isCompleted = ns === 'completed'
+                              const disabled = isCompleted && !o.customerConfirmed
+                              return (
+                                <button
+                                  key={ns}
+                                  onClick={() => !disabled && handleStatus(o.id, ns, o.version)}
+                                  disabled={disabled}
+                                  title={disabled ? 'Khách hàng chưa xác nhận nhận hàng' : ''}
+                                  className={`text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors
+                                    ${STATUS_MAP[ns]?.cls || 'bg-slate-700 text-slate-300'}
+                                    ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}`}
+                                >
+                                  → {STATUS_MAP[ns]?.label}
+                                </button>
+                              )
+                            })}
                           </div>
                         )}
                       </td>

@@ -136,6 +136,7 @@ model Order {
   paymentMethod   String   @default("cod")
   paymentStatus   String   @default("unpaid")
   paymentProof    String?  // URL/base64 ảnh chứng minh chuyển khoản
+  customerConfirmed Boolean @default(false) // khách xác nhận đã nhận hàng
   version         Int      @default(0)  // optimistic locking
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

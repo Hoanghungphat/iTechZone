@@ -1,7 +1,7 @@
 /**
  * src/modules/order/order.controller.js
  */
-import { placeOrder, getMyOrders, getOrderDetail, cancelMyOrder, submitPaymentProof } from './order.service.js'
+import { placeOrder, getMyOrders, getOrderDetail, cancelMyOrder, submitPaymentProof, confirmReceipt } from './order.service.js'
 import { successResponse } from '../../core/utils/response.js'
 
 export async function placeOrderController(req, res, next) {
@@ -38,5 +38,12 @@ export async function submitPaymentProofController(req, res, next) {
     if (!proofImage) throw Object.assign(new Error('Thiếu ảnh xác nhận'), { status: 400 })
     const order = await submitPaymentProof(req.params.id, req.user.id, proofImage)
     return successResponse(res, order, 'Gửi xác nhận thanh toán thành công')
+  } catch (err) { next(err) }
+}
+
+export async function confirmReceiptController(req, res, next) {
+  try {
+    const order = await confirmReceipt(req.params.id, req.user.id)
+    return successResponse(res, order, 'Xác nhận nhận hàng thành công')
   } catch (err) { next(err) }
 }

@@ -134,7 +134,8 @@ export const ORDER_STATUS = {
   PENDING:    { value: 'pending',    label: 'Chờ xác nhận', color: '#854d0e', bg: '#fef9c3' },
   CONFIRMED:  { value: 'confirmed',  label: 'Đã xác nhận',  color: '#1e40af', bg: '#dbeafe' },
   SHIPPING:   { value: 'shipping',   label: 'Đang giao',     color: '#3730a3', bg: '#e0e7ff' },
-  DELIVERED:  { value: 'delivered',  label: 'Đã giao',       color: '#166534', bg: '#dcfce7' },
+  COMPLETED:  { value: 'completed',  label: 'Đã giao',       color: '#166534', bg: '#dcfce7' },
+  DELIVERED:  { value: 'delivered',  label: 'Đã giao',       color: '#166534', bg: '#dcfce7' }, // legacy
   CANCELLED:  { value: 'cancelled',  label: 'Đã hủy',        color: '#991b1b', bg: '#fee2e2' },
 }
 
