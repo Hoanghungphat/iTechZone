@@ -50,12 +50,14 @@ export default function ProductCard({ product, index = 0 }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
+      className="h-full"
     >
-      <Link to={`/san-pham/${product.slug}`} className="block group">
+      <Link to={`/san-pham/${product.slug}`} className="block group h-full">
         <div className="relative bg-white dark:bg-dark-800 rounded-2xl overflow-hidden
                         border border-gray-100 dark:border-dark-700
                         shadow-card hover:shadow-card-hover
-                        transition-all duration-300 hover:-translate-y-1">
+                        transition-all duration-300 hover:-translate-y-1
+                        flex flex-col h-full">
 
           {/* === IMAGE WRAPPER === */}
           <div className="relative overflow-hidden bg-gray-50 dark:bg-dark-700/50" style={{ aspectRatio: '1' }}>
@@ -127,15 +129,16 @@ export default function ProductCard({ product, index = 0 }) {
           </div>
 
           {/* === CONTENT === */}
-          <div className="p-4">
+          <div className="p-4 flex flex-col flex-1">
             {/* Brand */}
             <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
               {product.brandName}
             </p>
 
-            {/* Product name */}
+            {/* Product name — min-h giữ đủ 2 dòng để các card thẳng hàng */}
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug mb-2
-                           line-clamp-2 group-hover:text-primary-700 dark:group-hover:text-primary-400
+                           line-clamp-2 min-h-[2.5rem]
+                           group-hover:text-primary-700 dark:group-hover:text-primary-400
                            transition-colors duration-200">
               {product.name}
             </h3>
@@ -149,7 +152,7 @@ export default function ProductCard({ product, index = 0 }) {
             </div>
 
             {/* Price */}
-            <div className="space-y-0.5 mb-3">
+            <div className="space-y-0.5 mb-3 mt-auto">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-primary">
                   {formatPrice(product.price)}
