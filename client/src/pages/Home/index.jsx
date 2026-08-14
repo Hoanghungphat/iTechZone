@@ -98,16 +98,11 @@ function HeroBanner() {
 
             {/* Price */}
             {slide.price > 0 && (
-              <div className="flex items-baseline gap-3 mb-8 flex-wrap">
+              <div className="flex items-baseline gap-3 mb-8">
                 <span className="text-base text-gray-400 font-medium">Chỉ từ</span>
                 <span className="text-3xl font-black" style={{ color: slide.accent }}>
                   {formatPrice(slide.price)}
                 </span>
-                {slide.originalPrice > slide.price && (
-                  <span className="text-gray-500 line-through text-lg">
-                    {formatPrice(slide.originalPrice)}
-                  </span>
-                )}
               </div>
             )}
 
