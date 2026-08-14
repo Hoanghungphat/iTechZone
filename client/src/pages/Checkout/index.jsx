@@ -2,7 +2,7 @@
  * pages/Checkout/index.jsx
  * Trang thanh toán đơn hàng ITechZone
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, CreditCard, CheckCircle, Copy, QrCode } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   const { items, clearCart } = useCartStore()
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false) // chống double submit
   const [selectedPayment, setSelectedPayment] = useState('cod')
   const [qrData, setQrData] = useState(null) // { orderId, amount }
   const [countdown, setCountdown] = useState(300)
@@ -104,6 +105,10 @@ export default function CheckoutPage() {
       return
     }
 
+    // Chống double submit (click nhanh / StrictMode)
+    if (submittingRef.current) return
+    submittingRef.current = true
+
     setLoading(true)
     try {
       const orderItems = items.map(item => ({
@@ -139,6 +144,7 @@ export default function CheckoutPage() {
       toast.error(err.message || 'Có lỗi xảy ra. Vui lòng thử lại.')
     } finally {
       setLoading(false)
+      submittingRef.current = false
     }
   }
 
