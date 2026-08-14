@@ -17,7 +17,7 @@ const GRADIENTS = [
 ]
 
 const EMPTY_FORM = {
-  tag: '', title: '', subtitle: '', price: '', originalPrice: '',
+  tag: '', title: '', subtitle: '', price: '',
   ctaText: 'Khám phá', href: '/', image: '',
   gradient: 'from-dark-900 via-dark-800 to-dark-900',
   accent: '#e51c1c', isActive: true, sortOrder: 0,
@@ -46,7 +46,7 @@ export default function AdminBanners() {
   const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setShowForm(true) }
   const openEdit   = (b) => {
     setEditing(b)
-    setForm({ tag: b.tag, title: b.title, subtitle: b.subtitle, price: b.price, originalPrice: b.originalPrice, ctaText: b.ctaText, href: b.href, image: b.image, gradient: b.gradient, accent: b.accent, isActive: b.isActive, sortOrder: b.sortOrder })
+    setForm({ tag: b.tag, title: b.title, subtitle: b.subtitle, price: b.price, ctaText: b.ctaText, href: b.href, image: b.image, gradient: b.gradient, accent: b.accent, isActive: b.isActive, sortOrder: b.sortOrder })
     setShowForm(true)
   }
 
@@ -201,17 +201,10 @@ export default function AdminBanners() {
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-slate-400 mb-1 block">Giá bán (VNĐ)</label>
-                  <input type="number" value={form.price} onChange={f('price')} placeholder="31990000"
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500" />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-400 mb-1 block">Giá gốc (VNĐ)</label>
-                  <input type="number" value={form.originalPrice} onChange={f('originalPrice')} placeholder="34990000"
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500" />
-                </div>
+              <div>
+                <label className="text-xs text-slate-400 mb-1 block">Giá (VNĐ) — hiển thị "Chỉ từ ..."</label>
+                <input type="number" value={form.price} onChange={f('price')} placeholder="31990000"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500" />
               </div>
 
               <div>
