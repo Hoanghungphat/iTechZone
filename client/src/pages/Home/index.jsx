@@ -97,14 +97,19 @@ function HeroBanner() {
             <p className="text-lg text-gray-300 mb-8">{slide.subtitle}</p>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 mb-8">
-              <span className="text-3xl font-black" style={{ color: slide.accent }}>
-                {formatPrice(slide.price)}
-              </span>
-              <span className="text-gray-500 line-through text-lg">
-                {formatPrice(slide.originalPrice)}
-              </span>
-            </div>
+            {slide.price > 0 && (
+              <div className="flex items-baseline gap-3 mb-8 flex-wrap">
+                <span className="text-base text-gray-400 font-medium">Chỉ từ</span>
+                <span className="text-3xl font-black" style={{ color: slide.accent }}>
+                  {formatPrice(slide.price)}
+                </span>
+                {slide.originalPrice > slide.price && (
+                  <span className="text-gray-500 line-through text-lg">
+                    {formatPrice(slide.originalPrice)}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
