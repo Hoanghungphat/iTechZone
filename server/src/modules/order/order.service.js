@@ -39,16 +39,30 @@ export async function placeOrder(userId, {
       }
     }
 
-    items = bodyItems.map(bi => ({
-      productId:       bi.productId,
-      productName:     bi.productName,
-      productImage:    bi.productImage || null,
-      variant:         bi.variant || null,
-      variantColor:    bi.variantColor    || null,
-      variantCapacity: bi.variantCapacity || null,
-      quantity:        bi.quantity,
-      price:           bi.price,
-    }))
+    items = bodyItems.map(bi => {
+      const product = products.find(p => p.id === bi.productId)
+
+      // Xác định variant color/capacity
+      let variantColor    = bi.variantColor    || null
+      let variantCapacity = bi.variantCapacity || null
+
+      // Fallback: nếu không có color/capacity nhưng sản phẩm có variants → tự detect qua giá
+      if (!variantColor && product?.variants && Array.isArray(product.variants)) {
+        const matched = product.variants.find(v => Number(v.price) === Number(bi.price))
+        if (matched) { variantColor = matched.color; variantCapacity = matched.capacity }
+      }
+
+      return {
+        productId:       bi.productId,
+        productName:     bi.productName,
+        productImage:    bi.productImage || null,
+        variant:         bi.variant || null,
+        variantColor,
+        variantCapacity,
+        quantity:        bi.quantity,
+        price:           bi.price,
+      }
+    })
   } else {
     // Đọc từ DB cart
     const cartItems = await prisma.cartItem.findMany({
@@ -70,14 +84,27 @@ export async function placeOrder(userId, {
       }
     }
 
-    items = cartItems.map(i => ({
-      productId:    i.productId,
-      productName:  i.product.name,
-      productImage: i.product.image || i.product.thumbnail,
-      variant:      i.variant,
-      quantity:     i.quantity,
-      price:        i.product.price,
-    }))
+    items = cartItems.map(i => {
+      const price = i.product.price
+      let variantColor = null, variantCapacity = null
+
+      // Auto-detect variant qua giá
+      if (i.product.variants && Array.isArray(i.product.variants)) {
+        const matched = i.product.variants.find(v => Number(v.price) === Number(price))
+        if (matched) { variantColor = matched.color; variantCapacity = matched.capacity }
+      }
+
+      return {
+        productId:       i.productId,
+        productName:     i.product.name,
+        productImage:    i.product.image || i.product.thumbnail,
+        variant:         i.variant,
+        variantColor,
+        variantCapacity,
+        quantity:        i.quantity,
+        price,
+      }
+    })
   }
 
   const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
