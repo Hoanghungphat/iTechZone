@@ -2,7 +2,7 @@
  * pages/ProductDetail/index.jsx
  * Trang chi tiết sản phẩm với gallery, specs, reviews, related products
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
