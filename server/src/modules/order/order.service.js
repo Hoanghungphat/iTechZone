@@ -40,12 +40,14 @@ export async function placeOrder(userId, {
     }
 
     items = bodyItems.map(bi => ({
-      productId:    bi.productId,
-      productName:  bi.productName,
-      productImage: bi.productImage || null,
-      variant:      bi.variant || null,
-      quantity:     bi.quantity,
-      price:        bi.price,
+      productId:       bi.productId,
+      productName:     bi.productName,
+      productImage:    bi.productImage || null,
+      variant:         bi.variant || null,
+      variantColor:    bi.variantColor    || null,
+      variantCapacity: bi.variantCapacity || null,
+      quantity:        bi.quantity,
+      price:           bi.price,
     }))
   } else {
     // Đọc từ DB cart

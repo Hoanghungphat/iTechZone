@@ -26,6 +26,7 @@ export async function createOrder(userId, orderData, items) {
 
     // Cập nhật stock và sold cho từng sản phẩm
     for (const item of items) {
+      // Trừ product.stock chính
       await tx.product.update({
         where: { id: item.productId },
         data:  {
@@ -33,6 +34,22 @@ export async function createOrder(userId, orderData, items) {
           sold:  { increment: item.quantity },
         },
       })
+
+      // Nếu có variant → trừ thêm stock trong mảng JSON variants
+      if (item.variantColor && item.variantCapacity) {
+        const prod = await tx.product.findUnique({ where: { id: item.productId }, select: { variants: true } })
+        if (prod && Array.isArray(prod.variants)) {
+          const updatedVariants = prod.variants.map(v =>
+            v.color === item.variantColor && v.capacity === item.variantCapacity
+              ? { ...v, stock: Math.max(0, (v.stock || 0) - item.quantity) }
+              : v
+          )
+          await tx.product.update({
+            where: { id: item.productId },
+            data:  { variants: updatedVariants },
+          })
+        }
+      }
     }
 
     // Xoá giỏ hàng

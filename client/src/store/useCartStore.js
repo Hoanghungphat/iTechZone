@@ -79,12 +79,15 @@ const useCartStore = create(
        */
       addItem: (product, qty = 1) => {
         set((state) => {
-          const existing = state.items.find(i => i.id === product.id)
+          const cartKey = product.selectedColor && product.selectedCapacity
+            ? `${product.id}_${product.selectedColor}_${product.selectedCapacity}`
+            : product.id
+          const existing = state.items.find(i => i.cartKey === cartKey)
 
           if (existing) {
             return {
               items: state.items.map(i =>
-                i.id === product.id
+                i.cartKey === cartKey
                   ? { ...i, qty: Math.min(i.qty + qty, i.stock || 99) }
                   : i
               ),
@@ -93,6 +96,7 @@ const useCartStore = create(
 
           return {
             items: [...state.items, {
+              cartKey,
               id: product.id,
               slug: product.slug,
               name: product.name,
@@ -100,6 +104,8 @@ const useCartStore = create(
               price: product.price,
               thumbnail: product.thumbnail,
               stock: product.stock || 99,
+              variantColor:    product.selectedColor    || null,
+              variantCapacity: product.selectedCapacity || null,
               qty,
             }],
           }

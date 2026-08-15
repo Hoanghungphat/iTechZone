@@ -112,12 +112,14 @@ export default function CheckoutPage() {
     setLoading(true)
     try {
       const orderItems = items.map(item => ({
-        productId:    item.id,
-        productName:  item.name,
-        productImage: item.thumbnail || null,
-        quantity:     item.qty,
-        price:        item.price,
-        variant:      item.variant || null,
+        productId:       item.id,
+        productName:     item.name,
+        productImage:    item.thumbnail || null,
+        quantity:        item.qty,
+        price:           item.price,
+        variant:         item.variant || null,
+        variantColor:    item.variantColor    || null,
+        variantCapacity: item.variantCapacity || null,
       }))
 
       const shippingAddress = [form.address, form.district, form.city].filter(Boolean).join(', ')
