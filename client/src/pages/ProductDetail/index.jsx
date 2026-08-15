@@ -422,27 +422,51 @@ export default function ProductDetail() {
 
   const { addToCart } = useAddToCart()
   const { token } = useAuthStore()
+  const slugRef = useRef(slug)
+  slugRef.current = slug
 
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    getProductBySlug(slug)
-      .then(async (data) => {
-        setProduct(data)
-        // Khởi tạo variant mặc định (màu đầu tiên, dung lượng đầu tiên)
+  // Fetch sản phẩm — tách ra để có thể gọi lại nhiều lần
+  const fetchProduct = async (isFirstLoad = false) => {
+    if (isFirstLoad) { setLoading(true); setError(null) }
+    try {
+      const data = await getProductBySlug(slugRef.current)
+      setProduct(data)
+      if (isFirstLoad) {
         if (data.variants && data.variants.length > 0) {
           setSelectedColor(data.variants[0].color)
           setSelectedCapacity(data.variants[0].capacity)
         }
         const rel = await getRelatedProducts(data.id, 6)
         setRelated(rel)
-        setLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
+      }
+    } catch (err) {
+      if (isFirstLoad) setError(err.message)
+    } finally {
+      if (isFirstLoad) setLoading(false)
+    }
+  }
+
+  // Load lần đầu
+  useEffect(() => {
+    fetchProduct(true)
   }, [slug])
+
+  // Refetch stock khi user quay lại tab
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') fetchProduct(false)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [])
+
+  // Polling nhẹ mỗi 60 giây khi đang xem trang
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchProduct(false)
+    }, 60_000)
+    return () => clearInterval(timer)
+  }, [])
 
   // ============================================
   // VARIANT LOGIC
